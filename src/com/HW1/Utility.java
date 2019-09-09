@@ -93,4 +93,36 @@ public class Utility {
         bf.close();
         return new Input(landingSite, maxElevation,targets,elevationMap,algo);
     }
+
+    public static List<Coordinate> generateListCoordinatesFromString(String str)
+    {
+        List<Coordinate> coordinatesList = new ArrayList<>();
+        String[] coordinates = str.split(" ");
+        for(String coordinate:coordinates)
+        {
+            String[] xy = coordinate.split(",");
+            coordinatesList.add(new Coordinate(Integer.parseInt(xy[0]), Integer.parseInt(xy[1])));
+        }
+        return coordinatesList;
+    }
+
+    public static int calculateCostBFS(List<Coordinate> sequence)
+    {
+        Coordinate prev = sequence.get(0);
+        int totalCost=0;
+        for(int i=1;i<sequence.size();i++)
+        {
+            Coordinate currentCoordinate = sequence.get(i);
+            if(Math.abs(currentCoordinate.x-prev.x)==1 && Math.abs(currentCoordinate.y-prev.y)==1)
+            {
+                totalCost+=14;
+            }
+            else
+            {
+                totalCost+=10;
+            }
+            prev=currentCoordinate;
+        }
+        return totalCost;
+    }
 }

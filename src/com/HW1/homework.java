@@ -8,7 +8,7 @@ public class homework {
 
     public static void main(String[] args) throws IOException
     {
-        Input input =Utility.readFile("/Users/nishatiwari/CSCI561/src/com/HW1/test_for_bfsvsucs.txt");
+        Input input =Utility.readFile("/Users/nishatiwari/CSCI561/src/com/HW1/input3_ucs.txt");
         List<String> result;
 
         if(input.algo.equals("BFS"))
@@ -56,16 +56,17 @@ public class homework {
 
         String[] result = new String[targets.size()];
         Queue<Node> queue = new PriorityQueue<>(new UCSComparator());
-        queue.add(new Node(landingSite, 0, 0, null));
-        Set<Coordinate> close = new HashSet<>();
+        Node root = new Node(landingSite, 0, 0, null);
         HashMap<Coordinate, Coordinate> pathBacktracking = new HashMap<>();
+        queue.add(root);
+        pathBacktracking.put(root.coordinate, null);
+        Set<Coordinate> close = new HashSet<>();
         HashMap<Coordinate, Node> queuedNodes = new HashMap<>();
         int noOfTargets=targets.size();
         while (!queue.isEmpty()) {
             Node currNode = queue.poll();
             queuedNodes.put(currNode.coordinate, currNode);
             pathBacktracking.put(currNode.coordinate, currNode.parent==null?null:currNode.parent.coordinate);
-            close.add(currNode.coordinate);
             int index=targets.indexOf(currNode.coordinate);
             if (index!=-1)
             {
@@ -79,7 +80,7 @@ public class homework {
             List<Node> children = expandNode(currNode, elevationMap, maxElevation);
             for(Node node:children)
             {
-                if(!close.contains(node.coordinate) && !queuedNodes.containsKey(node.coordinate)) {
+                if(!close.contains(node.coordinate) && !queue.contains(node)) {
                     queue.add(node);
                 }
                 else if(queuedNodes.containsKey(node.coordinate))
@@ -108,8 +109,8 @@ public class homework {
         String[] result = new String[targets.size()];
         Queue<Node> queue = new LinkedList<Node>();
         queue.add(new Node(landingSite, 0, 0, null));
-        Set<Coordinate> close = new HashSet<Coordinate>();
-        HashMap<Coordinate, Coordinate> pathBacktracking = new HashMap<Coordinate, Coordinate>();
+        Set<Coordinate> close = new HashSet<>();
+        HashMap<Coordinate, Coordinate> pathBacktracking = new HashMap<>();
         int noOfTargets=targets.size();
         while (!queue.isEmpty()) {
             Node currNode = queue.poll();
@@ -147,7 +148,7 @@ public class homework {
         int y=currNode.coordinate.y;
         //List<Coordinate> sequence = new ArrayList<Coordinate>(currNode.sequence);
         //sequence.add(currNode.coordinate);
-        int diagonalCost=34;
+        int diagonalCost=14;
         int straightCost=10;
         if(x-1>=0)
         {
