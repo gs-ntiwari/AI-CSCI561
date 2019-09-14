@@ -1,12 +1,9 @@
 package com.HW1;
-
-import java.util.List;
-
 public class Node{
     Coordinate coordinate;
     int currentDepth=0;
     int currentCost=0;
-    List<Coordinate> sequence;
+    int heuristicCost=0;
     Node parent;
     Node(Coordinate coordinate, int currentCost, int currentDepth, Node parent)
     {
@@ -14,6 +11,14 @@ public class Node{
         this.currentCost=currentCost;
         this.currentDepth=currentDepth;
         this.parent=parent;
+    }
+    Node(Coordinate coordinate, int currentCost, Integer heuristicCost, int currentDepth, Node parent)
+    {
+        this.coordinate=coordinate;
+        this.currentCost=currentCost;
+        this.currentDepth=currentDepth;
+        this.parent=parent;
+        this.heuristicCost=heuristicCost;
     }
     public boolean equals(Object obj) {
         if (!(obj instanceof Node))
