@@ -26,15 +26,33 @@ public class homework {
         List<String> result;
         if (input.algo.equals("BFS")) {
             result = runBFS(input.landingSite, input.maxElevation, input.targets, input.elevationMap);
+            for(int i=0;i<result.size();i++) {
+                if (result.get(i) != null)
+                    System.out.println("Cost::" + Utility.calculateCost(Utility.generateListCoordinatesFromString(result.get(i)), 1, 1));
+                else
+                    System.out.println("Cost::" +"FAIL");
+            }
+
 
         } else if (input.algo.equals(("UCS"))) {
             result = runUCS(input.landingSite, input.maxElevation, input.targets, input.elevationMap);
+            for(int i=0;i<result.size();i++) {
+                if (result.get(i) != null)
+                    System.out.println("Cost::" + Utility.calculateCost(Utility.generateListCoordinatesFromString(result.get(i)), 14, 10));
+                else
+                    System.out.println("Cost::" +"FAIL");
+            }
         } else {
             result = runAstar(input.landingSite, input.maxElevation, input.targets, input.elevationMap);
-            System.out.println("Cost for AStar::"+Utility.calculateCost(Utility.generateListCoordinatesFromString(result.get(1)), 14, 10, input.elevationMap));
+            for(int i=0;i<result.size();i++) {
+                if (result.get(i) != null)
+                    System.out.println("Cost::" + Utility.calculateCost(Utility.generateListCoordinatesFromString(result.get(i)), 14, 10));//, input.elevationMap));
+                else
+                    System.out.println("Cost::" + "FAIL");
+            }
         }
-        //System.out.println("Total time taken for writing to a file in ms::"+ String.valueOf(System.currentTimeMillis()-startTime2));
         Utility.writeResultToFile(result, input.targets.size());
+        //System.out.println("Total time taken for writing to a file in ms::"+ String.valueOf(System.currentTimeMillis()-startTime2));
         System.out.println("Total time taken in ms::" + String.valueOf(System.currentTimeMillis() - startTime));
     }
 
@@ -255,7 +273,7 @@ public class homework {
 
     private static void addNodeToList(Node currNode, List<Node> nodes, int diagonalCost, int i, int i2, int[][] elevationMap, int x, int y, int[][] heuristic) {
         Coordinate child = new Coordinate(i, i2);
-        int g=currNode.currentCost + diagonalCost + (elevationMap != null ? Math.abs(elevationMap[x][y] - elevationMap[i][i2]) : 0);
+        int g=currNode.currentCost + diagonalCost;// (elevationMap != null ? Math.abs(elevationMap[x][y] - elevationMap[i][i2]) : 0);
         int h=heuristic[child.x][child.y];
         nodes.add(new Node(child, g, h, currNode.currentDepth + 1, currNode));
     }

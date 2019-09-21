@@ -2,6 +2,9 @@ package com.HW1;
 
 import java.io.*;
 import java.util.*;
+import java.util.stream.Collectors;
+
+import static java.util.Arrays.*;
 
 public class Utility {
 
@@ -158,23 +161,27 @@ public class Utility {
     public static int[][] precomputeHeuristic(int[][] elevationMap, List<Coordinate> targets)
 
     {
+        long startTime=System.currentTimeMillis();
         int[][] result = new int[elevationMap.length][elevationMap[0].length];
         for (int i = 0; i < elevationMap.length; i++) {
             for (int j = 0; j < elevationMap[0].length; j++) {
                 int minCost = Integer.MAX_VALUE;
+
                 for (Coordinate target : targets) {
                     int first = Math.abs(target.x - i);
                     int second = Math.abs(target.y - j);
-                    //int temp=(int) (10*Math.sqrt((target.x-i)^2+ (target.y-j)^2));
-                    int temp= 10*Math.max(first, second)+ Math.abs(elevationMap[target.x][target.y] - elevationMap[i][j]);
-                    //int temp = (first > second ? ((14 * first) + (10 * second)) : ((10 * first) + (14 * second)));
-                    // + Math.abs(elevationMap[target.x][target.y] - elevationMap[i][j]);
-                    if (minCost > temp)
-                        minCost = temp;
+                    int temp=(int) (10*Math.sqrt((target.x-i)^2+ (target.y-j)^2));//+Math.abs(elevationMap[target.x][target.y] - elevationMap[i][j]);
+                    //int temp=first>second?(first*10)+(14*(second-1)):(second*10)+(14*(first-1));
+                    //temp+=Math.abs(elevationMap[target.x][target.y] - elevationMap[i][j]);
+                    //int temp= 10*Math.max(first, second);//+Math.abs(elevationMap[target.x][target.y] - elevationMap[i][j]);
+                    //int temp = (first > second ? ((14 * first) + (10 * second-first)) : ((10 * first) + (14 * second)))
+                     //+ Math.abs(elevationMap[target.x][target.y] - elevationMap[i][j]);
+                    minCost=Math.min(minCost, temp);
                 }
                 result[i][j] = minCost;
             }
         }
+        System.out.println("Time for calculating heuristic::"+String.valueOf(System.currentTimeMillis()-startTime));
         return result;
     }
 
@@ -222,26 +229,6 @@ public class Utility {
 
     public static boolean isValidMove(int[][] elevationMap, int maxElevation, int x, int y, int x1, int y1) {
         return Math.abs(elevationMap[x][y] - elevationMap[x1][y1]) <= maxElevation;
-    }
-
-    private static int updateParamtersAndCost(Coordinate a, Coordinate b, boolean decrementx, boolean decrementy) {
-        int cost = 0;
-        return (int) (10 * Math.sqrt((a.x - b.x) ^ 2 + (a.y - b.y) ^ 2));
-        /**int ax=a.x, bx=b.x,ay=a.y,by=b.y;
-         while (true) {
-         if (ax == bx || by == ay)
-         break;
-         cost += 14;
-         if (decrementx)
-         ax--;
-         else
-         ax++;
-         if (decrementy)
-         ay--;
-         else
-         ay++;
-         }
-         return cost;**/
     }
 
 
