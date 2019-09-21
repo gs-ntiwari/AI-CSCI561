@@ -161,7 +161,7 @@ public class Utility {
     public static int[][] precomputeHeuristic(int[][] elevationMap, List<Coordinate> targets)
 
     {
-        long startTime=System.currentTimeMillis();
+        //long startTime=System.currentTimeMillis();
         int[][] result = new int[elevationMap.length][elevationMap[0].length];
         for (int i = 0; i < elevationMap.length; i++) {
             for (int j = 0; j < elevationMap[0].length; j++) {
@@ -170,7 +170,7 @@ public class Utility {
                 for (Coordinate target : targets) {
                     int first = Math.abs(target.x - i);
                     int second = Math.abs(target.y - j);
-                    int temp=(int) (10*Math.sqrt((target.x-i)^2+ (target.y-j)^2));//+Math.abs(elevationMap[target.x][target.y] - elevationMap[i][j]);
+                    int temp=(int) (10*Math.sqrt((target.x-i)^2+ (target.y-j)^2))+Math.abs(elevationMap[target.x][target.y] - elevationMap[i][j]);
                     //int temp=first>second?(first*10)+(14*(second-1)):(second*10)+(14*(first-1));
                     //temp+=Math.abs(elevationMap[target.x][target.y] - elevationMap[i][j]);
                     //int temp= 10*Math.max(first, second);//+Math.abs(elevationMap[target.x][target.y] - elevationMap[i][j]);
@@ -181,7 +181,7 @@ public class Utility {
                 result[i][j] = minCost;
             }
         }
-        System.out.println("Time for calculating heuristic::"+String.valueOf(System.currentTimeMillis()-startTime));
+        //System.out.println("Time for calculating heuristic::"+String.valueOf(System.currentTimeMillis()-startTime));
         return result;
     }
 
@@ -254,5 +254,32 @@ public class Utility {
             prev = currentCoordinate;
         }
         return totalCost;
+    }
+
+    public static void printResults(String algo, int[][] elevationMap, List<String> result) {
+        if (algo.equals("BFS")) {
+            for(int i=0;i<result.size();i++) {
+                if (result.get(i) != null)
+                    System.out.println("Cost::" + Utility.calculateCost(Utility.generateListCoordinatesFromString(result.get(i)), 1, 1));
+                else
+                    System.out.println("Cost::" +"FAIL");
+            }
+
+
+        } else if (algo.equals(("UCS"))) {
+            for(int i=0;i<result.size();i++) {
+                if (result.get(i) != null)
+                    System.out.println("Cost::" + Utility.calculateCost(Utility.generateListCoordinatesFromString(result.get(i)), 14, 10));
+                else
+                    System.out.println("Cost::" +"FAIL");
+            }
+        } else {
+            for(int i=0;i<result.size();i++) {
+                if (result.get(i) != null)
+                    System.out.println("Cost::" + Utility.calculateCost(Utility.generateListCoordinatesFromString(result.get(i)), 14, 10));//, input.elevationMap));
+                else
+                    System.out.println("Cost::" + "FAIL");
+            }
+        }
     }
 }

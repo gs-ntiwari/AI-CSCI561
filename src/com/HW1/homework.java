@@ -21,36 +21,17 @@ public class homework {
 
     public static void main(String[] args) throws IOException {
         long startTime = System.currentTimeMillis();
-        Input input = Utility.readFile("/Users/nishatiwari/CSCI561/src/com/HW1/input11.txt");
+        Input input = Utility.readFile("/Users/nishatiwari/CSCI561/src/com/HW1/input13.txt");
         //System.out.println("Total time taken for reading a file in ms::"+ String.valueOf(System.currentTimeMillis()-startTime));
         List<String> result;
         if (input.algo.equals("BFS")) {
             result = runBFS(input.landingSite, input.maxElevation, input.targets, input.elevationMap);
-            for(int i=0;i<result.size();i++) {
-                if (result.get(i) != null)
-                    System.out.println("Cost::" + Utility.calculateCost(Utility.generateListCoordinatesFromString(result.get(i)), 1, 1));
-                else
-                    System.out.println("Cost::" +"FAIL");
-            }
-
-
         } else if (input.algo.equals(("UCS"))) {
             result = runUCS(input.landingSite, input.maxElevation, input.targets, input.elevationMap);
-            for(int i=0;i<result.size();i++) {
-                if (result.get(i) != null)
-                    System.out.println("Cost::" + Utility.calculateCost(Utility.generateListCoordinatesFromString(result.get(i)), 14, 10));
-                else
-                    System.out.println("Cost::" +"FAIL");
-            }
         } else {
             result = runAstar(input.landingSite, input.maxElevation, input.targets, input.elevationMap);
-            for(int i=0;i<result.size();i++) {
-                if (result.get(i) != null)
-                    System.out.println("Cost::" + Utility.calculateCost(Utility.generateListCoordinatesFromString(result.get(i)), 14, 10));//, input.elevationMap));
-                else
-                    System.out.println("Cost::" + "FAIL");
-            }
         }
+        Utility.printResults(input.algo, input.elevationMap, result);
         Utility.writeResultToFile(result, input.targets.size());
         //System.out.println("Total time taken for writing to a file in ms::"+ String.valueOf(System.currentTimeMillis()-startTime2));
         System.out.println("Total time taken in ms::" + String.valueOf(System.currentTimeMillis() - startTime));
@@ -69,6 +50,7 @@ public class homework {
 
     private static List<String> runUCS(Coordinate landingSite, int maxElevation, List<Coordinate> targets, int[][] elevationMap) {
         String[] result = new String[targets.size()];
+        //int[][] heuristics = Utility.precomputeHeuristic(elevationMap, targets);
         Queue<Node> queue = new PriorityQueue<>(new UCSComparator());
         Node root = new Node(landingSite, 0, 0, 0, null);
         HashMap<Coordinate, Coordinate> pathBacktracking = new HashMap<>();
@@ -87,7 +69,7 @@ public class homework {
                 if (noOfTargets == 0)
                     break;
             }
-            List<Node> children = expandNode(currNode, elevationMap, maxElevation,  false, null);
+            List<Node> children = expandNode(currNode, elevationMap, maxElevation);
             for (Node node : children) {
                 if (!close.contains(node.coordinate) && !queue.contains(node)) {
                     queue.add(node);
@@ -122,6 +104,7 @@ public class homework {
         Set<Coordinate> close = new HashSet<>();
         HashMap<Coordinate, Node> queuedNodes = new HashMap<>();
         queuedNodes.put(root.coordinate, root);
+        //List<Coordinate> updatedTargets= new ArrayList<>(targets);
         while (!queue.isEmpty()) {
             Node currNode = queue.poll();
             int index = targets.indexOf(currNode.coordinate);
@@ -130,6 +113,9 @@ public class homework {
                 noOfTargets--;
                 if (noOfTargets == 0)
                     break;
+                //updatedTargets.remove(currNode.coordinate);
+                //heuristics=Utility.precomputeHeuristic(elevationMap, updatedTargets);
+                //updateQueuedNodes(queuedNodes, heuristics);
             }
             List<Node> children = expandNode(currNode, elevationMap, maxElevation, heuristics, true);
             for (Node node : children) {
@@ -152,6 +138,15 @@ public class homework {
         return Arrays.asList(result);
 }
 
+    private static void updateQueuedNodes(HashMap<Coordinate, Node> queuedNodes, int[][] heuristics) {
+        for(Map.Entry entry:queuedNodes.entrySet())
+        {
+            Node currentNode=(Node)entry.getValue();
+            currentNode.heuristicCost=heuristics[currentNode.coordinate.x][currentNode.coordinate.y];
+            queuedNodes.put(currentNode.coordinate, currentNode);
+        }
+    }
+
     private static List<String> runBFS(Coordinate landingSite, int maxElevation, List<Coordinate> targets, int[][] elevationMap) {
         String[] result = new String[targets.size()];
         HashMap<Coordinate, Coordinate> pathBacktracking = new HashMap<>();
@@ -171,7 +166,7 @@ public class homework {
                 if (noOfTargets == 0)
                     break;
             }
-            List<Node> children = expandNode(currNode, elevationMap, maxElevation, false,null );
+            List<Node> children = expandNode(currNode, elevationMap, maxElevation);
             for (Node node : children) {
                 if (!close.contains(node.coordinate)) {
                     queue.add(node);
@@ -183,7 +178,7 @@ public class homework {
         return Arrays.asList(result);
     }
 
-    private static List<Node> expandNode(Node currNode, int[][] elevationMap, int maxElevation, boolean isAStar, Coordinate targets) {
+    private static List<Node> expandNode(Node currNode, int[][] elevationMap, int maxElevation) {
         //System.out.println("expand node start");
         int W = elevationMap.length;
         int H = elevationMap[0].length;
@@ -194,31 +189,31 @@ public class homework {
         int straightCost = 10;
         if (x - 1 >= 0) {
             if (y - 1 >= 0 && Utility.isValidMove(elevationMap, maxElevation, x, y, x - 1, y - 1)) {
-                addNodeToList(currNode, targets, nodes, diagonalCost, x - 1, y - 1, isAStar ? elevationMap : null, x, y);
+                addNodeToList(currNode, nodes, diagonalCost, x - 1, y - 1);
             }
             if (y + 1 < H && Utility.isValidMove(elevationMap, maxElevation, x, y, x - 1, y + 1)) {
-                addNodeToList(currNode, targets, nodes, diagonalCost, x - 1, y + 1, isAStar ? elevationMap : null, x, y);
+                addNodeToList(currNode, nodes, diagonalCost, x - 1, y + 1);
             }
             if (Utility.isValidMove(elevationMap, maxElevation, x, y, x - 1, y)) {
-                addNodeToList(currNode, targets, nodes, straightCost, x - 1, y, isAStar ? elevationMap : null, x, y);
+                addNodeToList(currNode, nodes, straightCost, x - 1, y);
             }
         }
         if (x + 1 < W) {
             if (y - 1 >= 0 && Utility.isValidMove(elevationMap, maxElevation, x, y, x + 1, y - 1)) {
-                addNodeToList(currNode, targets, nodes, diagonalCost, x + 1, y - 1, isAStar ? elevationMap : null, x, y);
+                addNodeToList(currNode, nodes, diagonalCost, x + 1, y - 1);
             }
             if (y + 1 < H && Utility.isValidMove(elevationMap, maxElevation, x, y, x + 1, y + 1)) {
-                addNodeToList(currNode, targets, nodes, diagonalCost, x + 1, y + 1, isAStar ? elevationMap : null, x, y);
+                addNodeToList(currNode, nodes, diagonalCost, x + 1, y + 1);
             }
             if (Utility.isValidMove(elevationMap, maxElevation, x, y, x + 1, y)) {
-                addNodeToList(currNode, targets, nodes, straightCost, x + 1, y, isAStar ? elevationMap : null, x, y);
+                addNodeToList(currNode, nodes, straightCost, x + 1, y);
             }
         }
         if (y - 1 >= 0 && Utility.isValidMove(elevationMap, maxElevation, x, y, x, y - 1)) {
-            addNodeToList(currNode, targets, nodes, straightCost, x, y - 1, isAStar ? elevationMap : null, x, y);
+            addNodeToList(currNode,nodes, straightCost, x, y - 1);
         }
         if (y + 1 < H && Utility.isValidMove(elevationMap, maxElevation, x, y, x, y + 1)) {
-            addNodeToList(currNode, targets, nodes, straightCost, x, y + 1, isAStar ? elevationMap : null, x, y);
+            addNodeToList(currNode,nodes, straightCost, x, y + 1);
         }
         //System.out.println("expand node end");
         return nodes;
@@ -266,14 +261,14 @@ public class homework {
     }
 
 
-    private static void addNodeToList(Node currNode, Coordinate targets, List<Node> nodes, int diagonalCost, int i, int i2, int[][] elevationMap, int x, int y) {
+    private static void addNodeToList(Node currNode, List<Node> nodes, int diagonalCost, int i, int i2) {
         Coordinate child = new Coordinate(i, i2);
-        nodes.add(new Node(child, currNode.currentCost + diagonalCost + (elevationMap != null ? Math.abs(elevationMap[x][y] - elevationMap[i][i2]) : 0), Utility.findShortestDistance(targets, child), currNode.currentDepth + 1, currNode));
+        nodes.add(new Node(child, currNode.currentCost + diagonalCost, currNode.currentDepth + 1, currNode));
     }
 
     private static void addNodeToList(Node currNode, List<Node> nodes, int diagonalCost, int i, int i2, int[][] elevationMap, int x, int y, int[][] heuristic) {
         Coordinate child = new Coordinate(i, i2);
-        int g=currNode.currentCost + diagonalCost;// (elevationMap != null ? Math.abs(elevationMap[x][y] - elevationMap[i][i2]) : 0);
+        int g=currNode.currentCost + diagonalCost+ (elevationMap != null ? Math.abs(elevationMap[x][y] - elevationMap[i][i2]) : 0);
         int h=heuristic[child.x][child.y];
         nodes.add(new Node(child, g, h, currNode.currentDepth + 1, currNode));
     }
