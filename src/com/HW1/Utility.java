@@ -18,15 +18,6 @@ public class Utility {
 
     public static void writeResultToFile(String[] result) throws IOException {
         Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("output.txt"), "utf-8"));
-        /*if (result.isEmpty() && N > 0) {
-            int count = 0;
-            while (count != N) {
-                writer.write("FAIL");
-                count++;
-            }
-            writer.close();
-            return;
-        }*/
         for (int i = 0; i < result.length; i++) {
             String str = result[i];
             if (str == null)
@@ -36,12 +27,6 @@ public class Utility {
             if (i != result.length - 1)
                 ((BufferedWriter) writer).newLine();
         }
-        /*int count = 0;
-        while (count != N - result.size()) {
-            writer.write("FAIL");
-            count++;
-        }*/
-
         writer.close();
     }
 
@@ -148,26 +133,17 @@ public class Utility {
     public static int[][] precomputeHeuristic(int[][] elevationMap, List<Coordinate> targets)
 
     {
-        //long startTime=System.currentTimeMillis();
         int[][] result = new int[elevationMap.length][elevationMap[0].length];
         for (int i = 0; i < elevationMap.length; i++) {
             for (int j = 0; j < elevationMap[0].length; j++) {
                 int minCost = Integer.MAX_VALUE;
                 for (Coordinate target : targets) {
-                    //int first = Math.abs(target.x - i);
-                    //int second = Math.abs(target.y - j);
                     int temp = (int) (10 * Math.sqrt((target.x - i) ^ 2 + (target.y - j) ^ 2)) + Math.abs(elevationMap[target.x][target.y] - elevationMap[i][j]);
-                    //int temp=first>second?(first*10)+(14*(second-1)):(second*10)+(14*(first-1));
-                    //temp+=Math.abs(elevationMap[target.x][target.y] - elevationMap[i][j]);
-                    //int temp= 10*Math.max(first, second);//+Math.abs(elevationMap[target.x][target.y] - elevationMap[i][j]);
-                    //int temp = (first > second ? ((14 * first) + (10 * second-first)) : ((10 * first) + (14 * second)))
-                    //+ Math.abs(elevationMap[target.x][target.y] - elevationMap[i][j]);
                     minCost = Math.min(minCost, temp);
                 }
                 result[i][j] = minCost;
             }
         }
-        //System.out.println("Time for calculating heuristic::"+String.valueOf(System.currentTimeMillis()-startTime));
         return result;
     }
 

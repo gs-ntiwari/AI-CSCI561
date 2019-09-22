@@ -22,7 +22,6 @@ public class homework {
     public static void main(String[] args) throws IOException {
         long startTime = System.currentTimeMillis();
         Input input = Utility.readFile("/Users/nishatiwari/CSCI561/src/com/HW1/NoWay.txt");
-        //System.out.println("Total time taken for reading a file in ms::"+ String.valueOf(System.currentTimeMillis()-startTime));
         String[] result;
         if (input.algo.equals("BFS")) {
             result = runBFS(input.landingSite, input.maxElevation, input.targets, input.elevationMap);
@@ -33,7 +32,6 @@ public class homework {
         }
         Utility.printResults(input.algo, input.elevationMap, result);
         Utility.writeResultToFile(result);
-        //System.out.println("Total time taken for writing to a file in ms::"+ String.valueOf(System.currentTimeMillis()-startTime2));
         System.out.println("Total time taken in ms::" + String.valueOf(System.currentTimeMillis() - startTime));
     }
 
@@ -103,7 +101,6 @@ public class homework {
         Set<Coordinate> close = new HashSet<>();
         HashMap<Coordinate, Node> queuedNodes = new HashMap<>();
         queuedNodes.put(root.coordinate, root);
-        //List<Coordinate> updatedTargets= new ArrayList<>(targets);
         while (!queue.isEmpty()) {
             Node currNode = queue.poll();
             int index = targets.indexOf(currNode.coordinate);
@@ -112,9 +109,6 @@ public class homework {
                 noOfTargets--;
                 if (noOfTargets == 0)
                     break;
-                //updatedTargets.remove(currNode.coordinate);
-                //heuristics=Utility.precomputeHeuristic(elevationMap, updatedTargets);
-                //updateQueuedNodes(queuedNodes, heuristics);
             }
             List<Node> children = expandNode(currNode, elevationMap, maxElevation, heuristics);
             for (Node node : children) {
@@ -235,7 +229,6 @@ public class homework {
         if (Utility.isValidMove(elevationMap, maxElevation, x, y, x, y + 1)) {
             addNodeToList(currNode, nodes, straightCost, x, y + 1, elevationMap, x, y, heuristics);
         }
-        //System.out.println("expand node end");
         return nodes;
     }
 
