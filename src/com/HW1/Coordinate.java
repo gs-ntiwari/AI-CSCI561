@@ -1,5 +1,7 @@
 package com.HW1;
 
+import java.io.Serializable;
+
 public class Coordinate{
     int x;
     int y;
