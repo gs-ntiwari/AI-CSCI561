@@ -1,8 +1,8 @@
-package HW2;
+package com.HW2;
 
 import java.util.*;
 
-import static HW2.Utility.isValidMove;
+import static com.HW2.Utility.isValidMove;
 
 public class GameState {
     private CellType[][] board;

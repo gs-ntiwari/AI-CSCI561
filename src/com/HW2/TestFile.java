@@ -1,4 +1,4 @@
-package HW2;
+package com.HW2;
 
 import java.io.IOException;
 import java.util.Set;
@@ -27,7 +27,7 @@ public class TestFile {
     }
 
     private static Input TestReadFile() throws IOException {
-        Input state=Utility.readFile("/Users/nishatiwari/CSCI561/src/HW2/input.txt");
+        Input state=Utility.readFile("/Users/nishatiwari/CSCI561/src/com.HW2/input.txt");
         assert state != null && state.time!=0;
         System.out.println(state.getInitState().getColor()+" "+state.isSinglePlayer+" "+state.time+" ");
         /*for(int i=0;i<16;i++)

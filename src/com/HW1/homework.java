@@ -21,7 +21,7 @@ public class homework {
 
     public static void main(String[] args) throws IOException {
         long startTime = System.currentTimeMillis();
-        Input input = Utility.readFile("/Users/nishatiwari/CSCI561/src/com/HW1/NoWay.txt");
+        Input input = Utility.readFile("/Users/nishatiwari/CSCI561/src/com/com.HW1/NoWay.txt");
         String[] result;
         if (input.algo.equals("BFS")) {
             result = runBFS(input.landingSite, input.maxElevation, input.targets, input.elevationMap);

@@ -15,9 +15,9 @@ public class Test{
         System.out.print("myresult:"+myresult+" expected:"+expectedresult);
 
         //System.out.print(Utility.findShortestDistance(new Coordinate(4, 0), new Coordinate(2, 1)));
-        testAStar("/Users/nishatiwari/CSCI561/src/com/HW1/AStar/");
-        testBFS("/Users/nishatiwari/CSCI561/src/com/HW1/BFS/");
-        testUCS("/Users/nishatiwari/CSCI561/src/com/HW1/UCS/");
+        testAStar("/Users/nishatiwari/CSCI561/src/com/com.HW1/AStar/");
+        testBFS("/Users/nishatiwari/CSCI561/src/com/com.HW1/BFS/");
+        testUCS("/Users/nishatiwari/CSCI561/src/com/com.HW1/UCS/");
     }
 
     private static void testAStar(String s) {
