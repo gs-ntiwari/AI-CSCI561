@@ -5,13 +5,11 @@ import java.util.*;
 import static com.HW2.Utility.isValidMove;
 
 public class GameState {
-    private CellType[][] board;
     private CellType color;
     private GameState parentState;
     private List<GameState> branches;
     private Set<Coordinate> whitePositions;
     private Set<Coordinate> blackPositions;
-    private List<Coordinate> sequenceToReach;
     private int evalValue = 0;
     private Coordinate fromCoordinate;
     private Coordinate toCoordinate;
@@ -32,14 +30,6 @@ public class GameState {
         this.blackPositions = blackPositions;
     }
 
-    public List<Coordinate> getSequenceToReach() {
-        return sequenceToReach;
-    }
-
-    public void setSequenceToReach(List<Coordinate> sequenceToReach) {
-        this.sequenceToReach = sequenceToReach;
-    }
-
     public Coordinate getFromCoordinate() {
         return fromCoordinate;
     }
@@ -54,14 +44,6 @@ public class GameState {
 
     public void setToCoordinate(Coordinate toCoordinate) {
         this.toCoordinate = toCoordinate;
-    }
-
-    public CellType[][] getBoard() {
-        return board;
-    }
-
-    public void setBoard(CellType[][] board) {
-        this.board = board;
     }
 
     public CellType getColor() {
@@ -97,12 +79,6 @@ public class GameState {
     }
 
 
-    public GameState(CellType[][] board, CellType color, GameState parentState) {
-        this.board = board;
-        this.color = color;
-        this.parentState = parentState;
-    }
-
     public GameState(Set<Coordinate> whitepositions, Set<Coordinate> blackpositions, CellType color, GameState parentState, Coordinate from, Coordinate to) {
         this.blackPositions = blackpositions;
         this.whitePositions = whitepositions;
@@ -122,10 +98,10 @@ public class GameState {
     }
 
 
-    public void generateBranches(int depth, CellType myColor) {
+    public void generateBranches(int depth, CellType myColor, Set<Coordinate> originalWhitePositions, Set<Coordinate> originalBlackPositions) {
         if (depth == 0)
         {
-            evalTerminalNode(myColor);
+            evalTerminalNode(myColor, originalWhitePositions,originalBlackPositions);
             return;
         }
         List<GameState> branches = new ArrayList<>();
@@ -138,23 +114,56 @@ public class GameState {
 
         for (GameState gameState : branches) {
             if (gameState != null)
-                gameState.generateBranches(depth - 1, myColor);
+                gameState.generateBranches(depth - 1, myColor, originalWhitePositions,originalBlackPositions);
         }
     }
 
-    private void evalTerminalNode(CellType mycolor) {
-        if(this.color==CellType.White)
-            evaluateFunction(this.whitePositions, this.blackPositions);
+    private void evalTerminalNode(CellType mycolor, Set<Coordinate> originalWhitePositions, Set<Coordinate> originalBlackPositions) {
+        if(mycolor==CellType.White)
+            evaluateFunction(this.whitePositions, this.blackPositions, originalWhitePositions,originalBlackPositions);
         else
-            evaluateFunction(this.blackPositions, this.whitePositions);
+            evaluateFunction(this.blackPositions, this.whitePositions, originalBlackPositions,originalWhitePositions);
     }
 
-    private void evaluateFunction(Set<Coordinate> myPositions, Set<Coordinate> opponentPositions) {
+    private void evaluateFunction(Set<Coordinate> myPositions, Set<Coordinate> opponentPositions, Set<Coordinate> originalMyPositions, Set<Coordinate> originalOpponentPositions) {
+        int eval=0;
+        int maximumDistance=21;
+        for(Coordinate position:myPositions)
+        {
+            if(originalOpponentPositions.contains(position))
+                eval+=maximumDistance;
+            else
+            {
+                eval+=maximumDistance-getAverageDistanceFromCurrentPosition(originalOpponentPositions, position);
+            }
+        }
 
+        for(Coordinate position:opponentPositions)
+        {
+            if(originalMyPositions.contains(position))
+                eval-=maximumDistance;
+            else
+            {
+                eval-=maximumDistance-getAverageDistanceFromCurrentPosition(originalMyPositions, position);
+            }
+        }
+        this.evalValue=eval;
+    }
+
+    private int getAverageDistanceFromCurrentPosition(Set<Coordinate> originalPositions, Coordinate position) {
+        double sum=0;
+        for(Coordinate currPosition:originalPositions)
+        {
+            sum=Math.max(calculateEuclideanDistance(currPosition, position), sum);
+        }
+        return (int)sum;
+    }
+
+    private double calculateEuclideanDistance(Coordinate currPosition, Coordinate position) {
+        return Math.sqrt((currPosition.x-position.x)^2+(currPosition.y-position.y)^2);
     }
 
     private List<GameState> generateAllPossibleBranches(Set<Coordinate> positions) {
-
         List<GameState> nextMoves = new ArrayList<>();
         for (Coordinate coordinate : positions) {
             int fromX = coordinate.x;
@@ -202,10 +211,6 @@ public class GameState {
         List<GameState> result = new ArrayList<>();
         if (!isValidMove('J', fromX, fromY, toX, toY, whitePositions, blackPositions))
             return result;
-        if (color == CellType.White)
-            this.blackPositions = positions;
-        else
-            this.whitePositions = positions;
         GameState currNode = new GameState(getWhitepositions(fromX, fromY, toX, toY, positions),getBlackpositions(fromX, fromY, toX, toY, positions), Utility.flipColor(this.color), this, new Coordinate(fromX, fromY), new Coordinate(toX, toY));
         Queue<GameState> queue = new LinkedList<>();
         queue.add(currNode);

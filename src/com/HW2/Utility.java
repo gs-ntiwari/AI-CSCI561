@@ -34,7 +34,7 @@ public class Utility {
         return new Input(isSingle, time, initState);
     }
 
-    public static void writeOutput(List<String> moveType, List<Node> source, List<Node> target) throws IOException {
+    public static void writeOutput(List<String> moveType, List<Coordinate> source, List<Coordinate> target) throws IOException {
         Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("output.txt"), "utf-8"));
         for (int i = 0; i < moveType.size(); i++) {
             StringBuilder strb = new StringBuilder(moveType.get(i));
