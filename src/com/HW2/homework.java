@@ -1,19 +1,20 @@
 package com.HW2;
 
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
+
 
 public class homework {
     public static void main(String[] args)
     {
         try {
             long startTime=System.currentTimeMillis();
-            Input input=Utility.readFile("/Users/nishatiwari/CSCI561/src/com/HW2/input.txt");
+            Input input=Utility.readFile("/Users/nishatiwari/CSCI561/src/com/HW2/test2.txt");
             GameState startingState=input.getInitState();
-            Set<Coordinate> whitePositions = new HashSet<>(startingState.getWhitePositions());
-            Set<Coordinate> blackPositions = new HashSet<>(startingState.getBlackPositions());
-            startingState.generateBranches(3, CellType.White, whitePositions, blackPositions);
+            Map<Coordinate, Coordinate> gamepath= new HashMap<>();
+            startingState.generateBranches(1, startingState.getColor(), gamepath);
+            Utility.writeOutput(startingState.getBranches().get(startingState.bestNode));
             System.out.println("time taken "+String.valueOf(System.currentTimeMillis()-startTime));
         } catch (IOException e) {
             e.printStackTrace();

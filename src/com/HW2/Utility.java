@@ -5,11 +5,62 @@ import java.util.*;
 
 public class Utility {
 
+
+    public static Set<Coordinate> getInitialPositions(CellType color)
+    {
+        Set<Coordinate> coordinates = new HashSet<>();
+        if(CellType.White==color)
+        {
+            coordinates.add(new Coordinate(15, 15));
+            coordinates.add(new Coordinate(14, 15));
+            coordinates.add(new Coordinate(13, 15));
+            coordinates.add(new Coordinate(12, 15));
+            coordinates.add(new Coordinate(11, 15));
+            coordinates.add(new Coordinate(15, 14));
+            coordinates.add(new Coordinate(15, 13));
+            coordinates.add(new Coordinate(15, 12));
+            coordinates.add(new Coordinate(15, 11));
+            coordinates.add(new Coordinate(14, 14));
+            coordinates.add(new Coordinate(14, 13));
+            coordinates.add(new Coordinate(14, 12));
+            coordinates.add(new Coordinate(14, 11));
+            coordinates.add(new Coordinate(13, 14));
+            coordinates.add(new Coordinate(12, 14));
+            coordinates.add(new Coordinate(11, 14));
+            coordinates.add(new Coordinate(13, 13));
+            coordinates.add(new Coordinate(12, 13));
+            coordinates.add(new Coordinate(13, 12));
+        }
+        else
+        {
+            coordinates.add(new Coordinate(0, 0));
+            coordinates.add(new Coordinate(1, 0));
+            coordinates.add(new Coordinate(2, 0));
+            coordinates.add(new Coordinate(3, 0));
+            coordinates.add(new Coordinate(4, 0));
+            coordinates.add(new Coordinate(0, 1));
+            coordinates.add(new Coordinate(0, 2));
+            coordinates.add(new Coordinate(0, 3));
+            coordinates.add(new Coordinate(0, 4));
+            coordinates.add(new Coordinate(1, 1));
+            coordinates.add(new Coordinate(1, 2));
+            coordinates.add(new Coordinate(1, 3));
+            coordinates.add(new Coordinate(1, 4));
+            coordinates.add(new Coordinate(2, 1));
+            coordinates.add(new Coordinate(3, 1));
+            coordinates.add(new Coordinate(4, 1));
+            coordinates.add(new Coordinate(2, 2));
+            coordinates.add(new Coordinate(2, 3));
+            coordinates.add(new Coordinate(3, 2));
+        }
+        return coordinates;
+    }
+
     public static Input readFile(String filename) throws IOException {
         BufferedReader bf = new BufferedReader(new FileReader(filename));
         String isSinglePlayer = bf.readLine();
         boolean isSingle = false;
-        if (isSinglePlayer.equals("SINGLE"))
+        if (isSinglePlayer.equalsIgnoreCase("SINGLE"))
             isSingle = true;
         String color = bf.readLine();
         double time = Double.parseDouble(bf.readLine());
@@ -21,36 +72,44 @@ public class Utility {
             char[] array = bf.readLine().toCharArray();
             for (int j = 0; j < array.length; j++) {
                 if (array[j] == '.')
-                    board[count][j] = CellType.Empty;
+                    board[j][count] = CellType.Empty;
                 else if (array[j] == 'B')
-                    blackPositions.add(new Coordinate(count, j));
+                    blackPositions.add(new Coordinate(j, count));
                 else
-                    whitePositions.add(new Coordinate(count, j));
+                    whitePositions.add(new Coordinate(j, count));
             }
             count++;
         }
         bf.close();
-        GameState initState = new GameState(whitePositions, blackPositions, color.equals("Black") ? CellType.Black : CellType.White, null);
+        GameState initState = new GameState(whitePositions, blackPositions, color.equalsIgnoreCase("Black") ? CellType.Black : CellType.White, null);
         return new Input(isSingle, time, initState);
     }
 
-    public static void writeOutput(List<String> moveType, List<Coordinate> source, List<Coordinate> target) throws IOException {
+    public static void writeOutput(GameState gameState) throws IOException {
         Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("output.txt"), "utf-8"));
-        for (int i = 0; i < moveType.size(); i++) {
-            StringBuilder strb = new StringBuilder(moveType.get(i));
+        List<Path> gamePath = gameState.getPath();
+        for (int i = 0; i < gamePath.size(); i++) {
+            StringBuilder strb = new StringBuilder(gamePath.get(i).moveType.getVal());
             strb.append(" ");
-            strb.append(source.get(i));
+            strb.append(gamePath.get(i).from);
             strb.append(" ");
-            strb.append(target.get(i));
-            if (i != moveType.size() - 1)
+            strb.append(gamePath.get(i).to);
+            writer.write(strb.toString());
+            if (i != gamePath.size() - 1)
                 ((BufferedWriter) writer).newLine();
         }
         writer.close();
     }
 
 
-    public static boolean isValidMove(char moveType, int fromX, int fromY, int toX, int toY, Set<Coordinate> whitePositions, Set<Coordinate> blackPositions) {
+    public static boolean isValidMove(char moveType, int fromX, int fromY, int toX, int toY, Set<Coordinate> whitePositions, Set<Coordinate> blackPositions, CellType color) {
         boolean isValid;
+        Set<Coordinate> initialPositions=getInitialPositions(color);
+        Set<Coordinate> opponentsInitialPositions= getInitialPositions(flipColor(color));
+        if(initialPositions.contains(new Coordinate(toX, toY)) && !initialPositions.contains(new Coordinate(fromX, fromY)))
+            return false;
+        if(opponentsInitialPositions.contains(new Coordinate(fromX, fromY)) && !opponentsInitialPositions.contains(new Coordinate(toX, toY)))
+            return false;
         if (moveType == 'J') {
             isValid = isValidJumpMove(fromX, fromY, toX, toY, whitePositions, blackPositions);
         } else {
