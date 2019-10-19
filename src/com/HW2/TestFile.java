@@ -8,10 +8,14 @@ import java.util.Set;
 public class TestFile {
 
     public static  void main (String[] args) throws IOException {
-        Input state=TestReadFile("input.txt");
+        /*Input state=TestReadFile("input.txt");
         TestIsValidJump(state.getInitState().getWhitePositions(), state.getInitState().getBlackPositions(), state.getInitState().getColor());
         state=TestReadFile("input1.txt");
         TestIsValidJump1(state.getInitState().getWhitePositions(), state.getInitState().getBlackPositions(), state.getInitState().getColor());
+        */
+        MasterAgent ma = new MasterAgent();
+        ma.initPlay();
+        ma.startPlay();
     }
 
     private static void TestIsValidJump(Set<Coordinate> white, Set<Coordinate> black, CellType color) {

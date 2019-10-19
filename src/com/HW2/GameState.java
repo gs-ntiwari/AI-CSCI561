@@ -2,6 +2,7 @@ package com.HW2;
 
 import java.util.*;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class GameState {
     private CellType color;
@@ -17,6 +18,7 @@ public class GameState {
     int alpha=Integer.MIN_VALUE;
     int beta=Integer.MAX_VALUE;
     int bestNode=-1;
+    Map<Integer, List<Integer>> tieBreaker= new HashMap<>();
 
     public List<Path> getPath() {
         return path;
@@ -147,29 +149,44 @@ public class GameState {
         }
         this.branches = branches;
 
-        int v=0;
+        int v;
+        if (this.color == myColor)
+        {
+            v=Integer.MIN_VALUE;
+        }
+        else
+        {
+            v=Integer.MAX_VALUE;
+        }
         for (int i=0;i<branches.size();i++) {
             GameState gameState=branches.get(i);
             if (gameState != null) {
+                int action_value = gameState.generateBranches(depth - 1, myColor, gamepath);
+                if(this.tieBreaker.containsKey(action_value)){
+                    List<Integer> indices= this.tieBreaker.get(action_value);
+                    indices.add(i);
+                    this.tieBreaker.put(action_value, indices);
+                }else{
+                    ArrayList<Integer> indices = new ArrayList<>();
+                    indices.add(i);
+                    this.tieBreaker.put(action_value, indices);
+                }
                 if (this.color == myColor) {
-                    v=Integer.MIN_VALUE;
-                    v = Math.max(v, gameState.generateBranches(depth - 1, myColor, gamepath));
-                    if (v >= gameState.beta)
+                    v = Math.max(v, action_value);
+                    if (v >= this.beta)
                         return v;
                     if(this.alpha<v) {
                         this.alpha = v;
                         this.bestNode=i;
                     }
                 } else {
-                    v=Integer.MAX_VALUE;
-                    v = Math.min(v, gameState.generateBranches(depth - 1, myColor, gamepath));
-                    if (v <= gameState.alpha)
+                    v = Math.min(v, action_value);
+                    if (v <= this.alpha)
                         return v;
                     if(this.beta>v) {
                         this.beta = v;
                         this.bestNode=i;
                     }
-
                 }
             }
         }
@@ -187,12 +204,15 @@ public class GameState {
 
     private void evaluateFunction(CellType color, Set<Coordinate> myPositions, Set<Coordinate> opponentPositions, Set<Coordinate> originalMyPositions, Set<Coordinate> originalOpponentPositions) {
         int eval = 0;
-        int maximumDistance = 22;
+        int maxWhenNotInOpponentCamp = 22;
+        int maxWhenInOpponentCamp = 2 * maxWhenNotInOpponentCamp;
+
         for (Coordinate position : myPositions) {
+            int distance=getDistanceFromCurrentPosition(position, color);
             if (originalOpponentPositions.contains(position))
-                eval += 4*maximumDistance;
+                eval += maxWhenInOpponentCamp - distance;
             else {
-                int distance=getDistanceFromCurrentPosition(position, color);
+
                 int v;
                 if(distance<=7)
                     v=3;
@@ -201,14 +221,14 @@ public class GameState {
                 else
                     v=1;
 
-                eval += v*maximumDistance - distance;
+                eval += maxWhenNotInOpponentCamp - distance;
             }
         }
         for (Coordinate position : opponentPositions) {
+            int distance=getDistanceFromCurrentPosition(position, Utility.flipColor(color));
             if (originalMyPositions.contains(position))
-                eval -= 4*maximumDistance;
+                eval -= maxWhenInOpponentCamp - distance;
             else {
-                int distance=getDistanceFromCurrentPosition(position, Utility.flipColor(color));
                 int v;
                 if(distance<=7)
                     v=3;
@@ -217,7 +237,7 @@ public class GameState {
                 else
                     v=1;
 
-                eval -= v*maximumDistance - distance;
+                eval -= maxWhenNotInOpponentCamp - distance;
             }
         }
         this.evalValue = eval;
@@ -271,32 +291,69 @@ public class GameState {
             nextMoves.addAll(generateAllJumpMoves(fromX, fromY, positions));
         }
 
-        if(needToMoveFromInitialState)
-            nextMoves=filterMoves(nextMoves, initialPositions);
+        nextMoves=filterOutInvalidMoves(nextMoves, initialPositions);
 
+        if(needToMoveFromInitialState)
+            nextMoves= filterMovesForWhenPiecesInCamp(nextMoves, initialPositions);
+
+        //TODO If nextMoves IS EMPTY, DO SOMETHING.
         return nextMoves;
     }
 
-    private List<GameState>  filterMoves(List<GameState> nextMoves, Set<Coordinate> initialPositions) {
+    private List<GameState> filterOutInvalidMoves(List<GameState> nextMoves, Set<Coordinate> initialPositions) {
+        Set<Coordinate> opponentsInitialPositions= Utility.getInitialPositions(Utility.flipColor(this.color));
+        // A piece cannot move back to its camp.
+        // Once a piece enters opponent's camp, it cannot move out.
+        List<GameState> filtered = nextMoves.stream()
+                .filter(b -> (!(initialPositions.contains(b.toCoordinate) && !initialPositions.contains(b.fromCoordinate)))&&!(opponentsInitialPositions.contains(b.fromCoordinate) && !opponentsInitialPositions.contains(b.toCoordinate)))
+                .collect(Collectors.toList());
+
+        return filtered;
+    }
+
+    private List<GameState> filterMovesForWhenPiecesInCamp(List<GameState> nextMoves, Set<Coordinate> initialPositions) {
         List<GameState> leftOut = new ArrayList<>();
-        for(int i=0;i<nextMoves.size();i++)
-        {
-            if(!initialPositions.contains(nextMoves.get(i).toCoordinate))
-            {
+
+        for(int i=0;i<nextMoves.size();i++) {
+            // First, try to select only moves that make the pieces leave the camp.
+            if (!initialPositions.contains(nextMoves.get(i).toCoordinate)) {
                 leftOut.add(nextMoves.get(i));
             }
         }
-        if(leftOut.size()==0)
+        if(leftOut.isEmpty())
         {
+            // No moves exist to make the pieces leave the camp.
+            // Select moves that make pieces in the camp move farther away from their camp origin.
             for(int i=0;i<nextMoves.size();i++)
             {
-                if(isGreaterThan(nextMoves.get(i).toCoordinate,nextMoves.get(i).path.get(0).from))
+                if(CellType.Black==this.color&&isGreaterThan(nextMoves.get(i).toCoordinate,nextMoves.get(i).path.get(0).from))
+                {
+                    leftOut.add(nextMoves.get(i));
+                }
+                else if(CellType.White==this.color&&isLessThan(nextMoves.get(i).toCoordinate,nextMoves.get(i).path.get(0).from))
                 {
                     leftOut.add(nextMoves.get(i));
                 }
             }
         }
+        if(leftOut.isEmpty())
+        {
+            // No valid moves exist for pieces present in camp. Allow valid moves for other pieces.
+            for(int i=0;i<nextMoves.size();i++) {
+                if (!initialPositions.contains(nextMoves.get(i).fromCoordinate)) {
+                    leftOut.add(nextMoves.get(i));
+                }
+            }
+
+        }
+        if(leftOut.isEmpty()){
+            return nextMoves;
+        }
         return leftOut;
+    }
+
+    private boolean isLessThan(Coordinate to, Coordinate from) {
+        return to.x<=from.x && to.y<=from.y;
     }
 
     private boolean isGreaterThan(Coordinate to, Coordinate from) {

@@ -104,12 +104,6 @@ public class Utility {
 
     public static boolean isValidMove(char moveType, int fromX, int fromY, int toX, int toY, Set<Coordinate> whitePositions, Set<Coordinate> blackPositions, CellType color) {
         boolean isValid;
-        Set<Coordinate> initialPositions=getInitialPositions(color);
-        Set<Coordinate> opponentsInitialPositions= getInitialPositions(flipColor(color));
-        if(initialPositions.contains(new Coordinate(toX, toY)) && !initialPositions.contains(new Coordinate(fromX, fromY)))
-            return false;
-        if(opponentsInitialPositions.contains(new Coordinate(fromX, fromY)) && !opponentsInitialPositions.contains(new Coordinate(toX, toY)))
-            return false;
         if (moveType == 'J') {
             isValid = isValidJumpMove(fromX, fromY, toX, toY, whitePositions, blackPositions);
         } else {
@@ -158,8 +152,10 @@ public class Utility {
 
     public static Set<Coordinate> createBoardCopy(Set<Coordinate> currentPositons, int fromX, int fromY, int toX, int toY) {
         Set<Coordinate> newPositions = new HashSet<>(currentPositons);
-        newPositions.remove(new Coordinate(fromX, fromY));
-        newPositions.add(new Coordinate(toX, toY));
+        if(!currentPositons.contains(new Coordinate(toX, toY)) && currentPositons.contains(new Coordinate(fromX, fromY))) {
+            newPositions.remove(new Coordinate(fromX, fromY));
+            newPositions.add(new Coordinate(toX, toY));
+        }
         return newPositions;
     }
 
