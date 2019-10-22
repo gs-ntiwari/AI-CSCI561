@@ -135,8 +135,25 @@ public class GameState {
         this.path= new ArrayList<>();
     }
 
+    class DecreasingOrder<GameState> implements Comparator
+    {
 
-    public int generateBranches(int depth, CellType myColor, Map<Coordinate, Coordinate> gamepath) {
+        @Override
+        public int compare(Object o1, Object o2) {
+            return ((com.HW2.GameState)o2).evalValue-((com.HW2.GameState)o1).evalValue;
+        }
+    }
+
+    class IncreasingOrder<GameState> implements Comparator
+    {
+
+        @Override
+        public int compare(Object o1, Object o2) {
+            return ((com.HW2.GameState)o1).evalValue-((com.HW2.GameState)o2).evalValue;
+        }
+    }
+
+    public int generateBranches(int depth, CellType myColor) {
         if (depth == 0) {
             evalTerminalNode(myColor);
             return this.evalValue;
@@ -147,6 +164,15 @@ public class GameState {
         } else {
             branches.addAll(generateAllPossibleBranches(this.blackPositions));
         }
+        for(GameState branch:branches)
+        {
+            branch.evalTerminalNode(myColor);
+        }
+
+        /*if(depth%2==0)
+            Collections.sort(branches, new DecreasingOrder());
+        else
+            Collections.sort(branches, new IncreasingOrder());*/
         this.branches = branches;
 
         int v;
@@ -158,23 +184,22 @@ public class GameState {
         {
             v=Integer.MAX_VALUE;
         }
+        if(branches.size()>80)
+            depth=depth==3?1:depth;
         for (int i=0;i<branches.size();i++) {
             GameState gameState=branches.get(i);
             if (gameState != null) {
-                int action_value = gameState.generateBranches(depth - 1, myColor, gamepath);
-                if(this.tieBreaker.containsKey(action_value)){
-                    List<Integer> indices= this.tieBreaker.get(action_value);
-                    indices.add(i);
-                    this.tieBreaker.put(action_value, indices);
-                }else{
-                    ArrayList<Integer> indices = new ArrayList<>();
-                    indices.add(i);
-                    this.tieBreaker.put(action_value, indices);
+                int action_value;
+                if(Utility.isTerminalState(this.color, this.color==CellType.Black?gameState.blackPositions:gameState.whitePositions))
+                    action_value=this.color==myColor?10000000*depth:-10000000*depth;
+                else {
+                    action_value = gameState.generateBranches(depth - 1, myColor);
                 }
                 if (this.color == myColor) {
                     v = Math.max(v, action_value);
                     if (v >= this.beta)
                         return v;
+                    updateTieBreakerMap(i, action_value);
                     if(this.alpha<v) {
                         this.alpha = v;
                         this.bestNode=i;
@@ -183,6 +208,7 @@ public class GameState {
                     v = Math.min(v, action_value);
                     if (v <= this.alpha)
                         return v;
+                    updateTieBreakerMap(i, action_value);
                     if(this.beta>v) {
                         this.beta = v;
                         this.bestNode=i;
@@ -193,70 +219,159 @@ public class GameState {
         return v;
     }
 
+    private void updateTieBreakerMap(int i, int action_value) {
+        if(this.tieBreaker.containsKey(action_value)){
+            List<Integer> indices= this.tieBreaker.get(action_value);
+            indices.add(i);
+            this.tieBreaker.put(action_value, indices);
+        }else{
+            ArrayList<Integer> indices = new ArrayList<>();
+            indices.add(i);
+            this.tieBreaker.put(action_value, indices);
+        }
+    }
+
     private void evalTerminalNode(CellType mycolor) {
-        Set<Coordinate> originalWhitePositions=Utility.getInitialPositions(CellType.White);
-        Set<Coordinate> originalBlackPositions=Utility.getInitialPositions(CellType.Black);
+        Set<Coordinate> originalMyPositions=Utility.getInitialPositions(mycolor);
+        Set<Coordinate> originalOpponentPositions=Utility.getInitialPositions(Utility.flipColor(mycolor));
         if (mycolor == CellType.White)
-            evaluateFunction(mycolor, this.whitePositions, this.blackPositions, originalWhitePositions, originalBlackPositions);
+            evaluateFunction(mycolor, this.whitePositions, this.blackPositions, originalMyPositions, originalOpponentPositions);
         else
-            evaluateFunction(mycolor, this.blackPositions, this.whitePositions, originalBlackPositions, originalWhitePositions);
+            evaluateFunction(mycolor, this.blackPositions, this.whitePositions, originalMyPositions, originalOpponentPositions);
     }
 
     private void evaluateFunction(CellType color, Set<Coordinate> myPositions, Set<Coordinate> opponentPositions, Set<Coordinate> originalMyPositions, Set<Coordinate> originalOpponentPositions) {
-        int eval = 0;
-        int maxWhenNotInOpponentCamp = 22;
-        int maxWhenInOpponentCamp = 2 * maxWhenNotInOpponentCamp;
-
+        double float_eval = 0.0;
+        double avgDistance = 0.0;
+        final double maxWhenNotInOpponentCamp = Math.pow(23,2);
+        int numPiecesInOpponentsCamp = 0;
+        int avgDistanceFromDiagonal = 0;
+        final double wt_of_pieces_opponent_camp = 0.2;
+        final double wt_of_diagonal_distance = 0.5;
+        final double wt_of_avg_distance = 0.3;
         for (Coordinate position : myPositions) {
-            int distance=getDistanceFromCurrentPosition(position, color);
-            if (originalOpponentPositions.contains(position))
-                eval += maxWhenInOpponentCamp - distance;
-            else {
-
-                int v;
-                if(distance<=7)
-                    v=3;
-                else if(distance<=14)
-                    v=2;
-                else
-                    v=1;
-
-                eval += maxWhenNotInOpponentCamp - distance;
+            if (originalOpponentPositions.contains(position)) {
+                numPiecesInOpponentsCamp++;
+            } else {
+                avgDistanceFromDiagonal += color == CellType.White ? Math.pow(position.x + position.y, 2) : Math.pow((15 - position.x) +(15-position.y), 2);
+                avgDistance += getDistanceFromCurrentPosition(position, color);
             }
         }
+        /*for (Coordinate position : opponentPositions) {
+            if (originalMyPositions.contains(position)) {
+                numPiecesInOpponentsCamp--;
+            } else {
+                avgDistanceFromDiagonal -= (Utility.flipColor(color) == CellType.White ? Math.pow(position.x + position.y, 2) : Math.pow((15 - position.x) +(15-position.y), 2));
+                avgDistance -= getDistanceFromCurrentPosition(position, Utility.flipColor(color));
+            }
+        }*/
+        avgDistance /= myPositions.size();
+        avgDistanceFromDiagonal /= myPositions.size();
+        float_eval = (wt_of_pieces_opponent_camp * maxWhenNotInOpponentCamp * numPiecesInOpponentsCamp / myPositions.size() * maxWhenNotInOpponentCamp) + (wt_of_diagonal_distance * (-1*avgDistanceFromDiagonal)) +
+                (wt_of_avg_distance * -1*avgDistance);
+        this.evalValue = (int) (float_eval);
+
+    }
+
+    /*private void evaluateFunction(CellType color, Set<Coordinate> myPositions, Set<Coordinate> opponentPositions, Set<Coordinate> originalMyPositions, Set<Coordinate> originalOpponentPositions) {
+        final int maxWhenNotInOpponentCamp = 23;
+        final int maxWhenInOpponentCamp = 10;
+        final int maxWhenCrossedDiagonal = 5;
+        final int maxWhenCrossedSecondDiagonal = 7;
+        int maxDistance=Integer.MIN_VALUE;
+        int minDistance=Integer.MAX_VALUE;
+        int numPiecesInOpponentsCamp = 0;
+        int numPiecesCrossedDiagonal = 0;
+        int numPiecesCrossedSecondDiagonal = 0;
+
+        int avgDistance = 0;
+        int avgDistanceFromDiagonal = 0;
+        for (Coordinate position : myPositions) {
+            int distance = getDistanceFromCurrentPosition(position, color, originalMyPositions, originalOpponentPositions);
+            minDistance = Math.min(minDistance, distance);
+            if (originalOpponentPositions.contains(position)){
+                numPiecesInOpponentsCamp++;
+            }else{
+                avgDistanceFromDiagonal += position.x + position.y;
+
+                if(hasPieceCrossedSecondOffDiagonal(position, color)){
+                    numPiecesCrossedSecondDiagonal++;
+
+                } else if(hasPieceCrossedOffDiagonal(position, color)){
+                    numPiecesCrossedDiagonal++;
+                    distance *= 10;
+                }else{
+                    distance *= 20;
+                }
+                maxDistance = Math.max(maxDistance, distance);
+                avgDistance += distance;
+            }
+
+        }
+        avgDistanceFromDiagonal = myPositions.size() == numPiecesInOpponentsCamp? 0 : avgDistanceFromDiagonal/(myPositions.size()-numPiecesInOpponentsCamp);
+        avgDistance = myPositions.size() == numPiecesInOpponentsCamp? 0 : avgDistance/(myPositions.size()-numPiecesInOpponentsCamp);
+        final double wt_of_max_min = 0.3;
+        final double wt_of_pieces_opponent_camp = 0.4;
+        final double wt_of_diagonal_distance = 0.3;
+        double float_eval = 0.0;
+        float_eval = (-wt_of_max_min*(maxDistance) - (1-wt_of_max_min-wt_of_pieces_opponent_camp-wt_of_diagonal_distance)*avgDistance - wt_of_diagonal_distance*avgDistanceFromDiagonal + wt_of_pieces_opponent_camp*(numPiecesInOpponentsCamp*maxWhenInOpponentCamp + numPiecesCrossedDiagonal*maxWhenCrossedDiagonal + numPiecesCrossedSecondDiagonal*maxWhenCrossedSecondDiagonal));
+
+        maxDistance=Integer.MIN_VALUE;
+        minDistance=Integer.MAX_VALUE;
+        avgDistance = 0;
+        numPiecesInOpponentsCamp = 0;
+        // TODO: Make opponent computation consistent.
         for (Coordinate position : opponentPositions) {
-            int distance=getDistanceFromCurrentPosition(position, Utility.flipColor(color));
-            if (originalMyPositions.contains(position))
-                eval -= maxWhenInOpponentCamp - distance;
-            else {
-                int v;
-                if(distance<=7)
-                    v=3;
-                else if(distance<=14)
-                    v=2;
-                else
-                    v=1;
-
-                eval -= maxWhenNotInOpponentCamp - distance;
+            int distance=getDistanceFromCurrentPosition(position, Utility.flipColor(color), originalOpponentPositions, originalMyPositions);
+            minDistance = Math.min(minDistance, distance);
+            if (originalOpponentPositions.contains(position)){
+                numPiecesInOpponentsCamp++;
+            }else{
+                maxDistance = Math.max(maxDistance, distance);
+                avgDistance += distance;
             }
         }
-        this.evalValue = eval;
+        avgDistance = opponentPositions.size() == numPiecesInOpponentsCamp? 0 : avgDistance/(opponentPositions.size()-numPiecesInOpponentsCamp);
+        final double opp_wt = 0;
+        float_eval -=-(opp_wt* (-wt_of_max_min*(maxDistance) - (1-wt_of_max_min-wt_of_pieces_opponent_camp)*avgDistance + wt_of_pieces_opponent_camp*numPiecesInOpponentsCamp*maxWhenInOpponentCamp));
+        this.evalValue = (int)(100*float_eval);
+    }*/
+
+
+    private boolean hasPieceCrossedOffset(Coordinate position, CellType color, int offset){
+        Coordinate origin=color==CellType.Black?new Coordinate(0,0):new Coordinate(15,15);
+        int pos_sign = position.x + position.y - offset;
+        int origin_sign = origin.x + origin.y - offset;
+        return  pos_sign*origin_sign < 0;
+    }
+    private boolean hasPieceCrossedOffDiagonal(Coordinate position, CellType color){
+        return hasPieceCrossedOffset(position, color, 15);
+    }
+    private boolean hasPieceCrossedSecondOffDiagonal(Coordinate position, CellType color){
+        return hasPieceCrossedOffset(position, color, (color==CellType.Black? 24 : 6));
     }
 
-
-
-    private int getDistanceFromCurrentPosition(Coordinate position, CellType color) {
-         return (int)Math.ceil(calculateEuclideanDistance(color==CellType.Black?new Coordinate(15,15): new Coordinate(0,0), position));
-
+    private int getDistanceFromCurrentPosition(Coordinate position, CellType color, Set<Coordinate> originalMyPositions, Set<Coordinate> originalOpponentPositions) {
+        double d=Integer.MIN_VALUE;
+        for(Coordinate currentPosition:originalMyPositions) {
+            if(!originalOpponentPositions.contains(currentPosition))
+                d = Math.max(Utility.calculateEuclideanDistance(currentPosition, position), d);
+        }
+        return (int) Math.round(d);
     }
 
-    private double calculateEuclideanDistance(Coordinate currPosition, Coordinate position) {
-        return Math.sqrt((currPosition.x - position.x) ^ 2 + (currPosition.y - position.y) ^ 2);
+    private double getDistanceFromCurrentPosition(Coordinate position, CellType color) {
+        double d=Math.pow(Utility.calculateEuclideanDistance(position, color==CellType.White?new Coordinate(0,0): new Coordinate(15,15)),2);
+        return  Math.round(d);
     }
 
     private List<GameState> generateAllPossibleBranches(Set<Coordinate> positions) {
         List<GameState> nextMoves = new ArrayList<>();
         Set<Coordinate> initialPositions = Utility.getInitialPositions(this.color);
+        /*if(this.color==CellType.Black) {
+            nextMoves.add(new GameState(this.whitePositions, this.blackPositions, Utility.flipColor(this.color), this, new Coordinate(-1, -1), new Coordinate(-1, -1), MoveType.Adjacent));
+            return nextMoves;
+        }*/
         //there are moves left at home
         boolean needToMoveFromInitialState=true;
 
@@ -265,11 +380,14 @@ public class GameState {
             needToMoveFromInitialState=false;
 
         for (Coordinate coordinate : positions) {
-            if(needToMoveFromInitialState && (!initialPositions.contains(coordinate)))
-                continue;
+            /*if(needToMoveFromInitialState && (!initialPositions.contains(coordinate)))
+                continue;*/
             int fromX = coordinate.x;
             int fromY = coordinate.y;
             //Adjacent Moves
+            //Jump Moves
+            nextMoves.addAll(generateAllJumpMoves(fromX, fromY, positions));
+
             Coordinate from = new Coordinate(fromX, fromY);
             if (Utility.isValidMove('A', fromX, fromY, fromX + 1, fromY, whitePositions, blackPositions, this.color))
                 nextMoves.add(new GameState(getWhitepositions(fromX, fromY, fromX + 1, fromY, positions), getBlackpositions(fromX, fromY, fromX + 1, fromY, positions), Utility.flipColor(this.color), this, from, new Coordinate(fromX + 1, fromY), MoveType.Adjacent));
@@ -287,8 +405,6 @@ public class GameState {
                 nextMoves.add(new GameState(getWhitepositions(fromX, fromY, fromX - 1, fromY - 1, positions), getBlackpositions(fromX, fromY, fromX - 1, fromY - 1, positions), Utility.flipColor(this.color), this, from, new Coordinate(fromX - 1, fromY - 1), MoveType.Adjacent));
             if (Utility.isValidMove('A', fromX, fromY, fromX, fromY - 1, whitePositions, blackPositions, this.color))
                 nextMoves.add(new GameState(getWhitepositions(fromX, fromY, fromX, fromY - 1, positions), getBlackpositions(fromX, fromY, fromX, fromY - 1, positions), Utility.flipColor(this.color), this, from, new Coordinate(fromX, fromY - 1), MoveType.Adjacent));
-            //Jump Moves
-            nextMoves.addAll(generateAllJumpMoves(fromX, fromY, positions));
         }
 
         nextMoves=filterOutInvalidMoves(nextMoves, initialPositions);
@@ -305,7 +421,7 @@ public class GameState {
         // A piece cannot move back to its camp.
         // Once a piece enters opponent's camp, it cannot move out.
         List<GameState> filtered = nextMoves.stream()
-                .filter(b -> (!(initialPositions.contains(b.toCoordinate) && !initialPositions.contains(b.fromCoordinate)))&&!(opponentsInitialPositions.contains(b.fromCoordinate) && !opponentsInitialPositions.contains(b.toCoordinate)))
+                .filter(move -> (!(initialPositions.contains(move.toCoordinate) && !initialPositions.contains(move.fromCoordinate))) && !(opponentsInitialPositions.contains(move.fromCoordinate) && !opponentsInitialPositions.contains(move.toCoordinate)))
                 .collect(Collectors.toList());
 
         return filtered;
@@ -313,41 +429,47 @@ public class GameState {
 
     private List<GameState> filterMovesForWhenPiecesInCamp(List<GameState> nextMoves, Set<Coordinate> initialPositions) {
         List<GameState> leftOut = new ArrayList<>();
+        List<GameState> movesForPiecesOutsideCamp= new ArrayList<>();
+        List<GameState> remainingInCamp= new ArrayList<>();
 
         for(int i=0;i<nextMoves.size();i++) {
+
+            //When no moves possible inside the camp, then allow pieces outside camp to make a move.
+            if(!initialPositions.contains(nextMoves.get(i).path.get(0).from))
+            {
+                movesForPiecesOutsideCamp.add(nextMoves.get(i));
+            }
             // First, try to select only moves that make the pieces leave the camp.
-            if (!initialPositions.contains(nextMoves.get(i).toCoordinate)) {
+            else if (!initialPositions.contains(nextMoves.get(i).toCoordinate)) {
                 leftOut.add(nextMoves.get(i));
             }
+            else
+            {
+                remainingInCamp.add(nextMoves.get(i));
+            }
+
         }
         if(leftOut.isEmpty())
         {
             // No moves exist to make the pieces leave the camp.
             // Select moves that make pieces in the camp move farther away from their camp origin.
-            for(int i=0;i<nextMoves.size();i++)
+            for(int i=0;i<remainingInCamp.size();i++)
             {
-                if(CellType.Black==this.color&&isGreaterThan(nextMoves.get(i).toCoordinate,nextMoves.get(i).path.get(0).from))
+                if(CellType.Black==this.color&&isGreaterThan(remainingInCamp.get(i).toCoordinate,remainingInCamp.get(i).path.get(0).from))
                 {
-                    leftOut.add(nextMoves.get(i));
+                    leftOut.add(remainingInCamp.get(i));
                 }
-                else if(CellType.White==this.color&&isLessThan(nextMoves.get(i).toCoordinate,nextMoves.get(i).path.get(0).from))
+                else if(CellType.White==this.color&&isLessThan(remainingInCamp.get(i).toCoordinate,remainingInCamp.get(i).path.get(0).from))
                 {
-                    leftOut.add(nextMoves.get(i));
+                    leftOut.add(remainingInCamp.get(i));
                 }
             }
         }
         if(leftOut.isEmpty())
         {
             // No valid moves exist for pieces present in camp. Allow valid moves for other pieces.
-            for(int i=0;i<nextMoves.size();i++) {
-                if (!initialPositions.contains(nextMoves.get(i).fromCoordinate)) {
-                    leftOut.add(nextMoves.get(i));
-                }
-            }
+           return movesForPiecesOutsideCamp;
 
-        }
-        if(leftOut.isEmpty()){
-            return nextMoves;
         }
         return leftOut;
     }

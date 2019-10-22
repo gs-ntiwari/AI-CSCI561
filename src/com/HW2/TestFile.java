@@ -2,20 +2,83 @@ package com.HW2;
 
 import javafx.scene.control.Cell;
 
-import java.io.IOException;
+import javax.swing.*;
+import java.io.*;
 import java.util.Set;
 
 public class TestFile {
 
     public static  void main (String[] args) throws IOException {
-        /*Input state=TestReadFile("input.txt");
+        long time=System.currentTimeMillis();
+        /*PlayData pd = new PlayData();
+        pd.setMoveCount(0);
+        FileOutputStream file1 = new FileOutputStream("PlayData.ser");
+        ObjectOutputStream out = new ObjectOutputStream(file1);
+
+        // Method for serialization of object
+        out.writeObject(pd);
+        out.close();
+        file1.close();
+        Input state=TestReadFile("input.txt");
         TestIsValidJump(state.getInitState().getWhitePositions(), state.getInitState().getBlackPositions(), state.getInitState().getColor());
         state=TestReadFile("input1.txt");
-        TestIsValidJump1(state.getInitState().getWhitePositions(), state.getInitState().getBlackPositions(), state.getInitState().getColor());
-        */
+        TestIsValidJump1(state.getInitState().getWhitePositions(), state.getInitState().getBlackPositions(), state.getInitState().getColor());*/
         MasterAgent ma = new MasterAgent();
-        ma.initPlay();
-        ma.startPlay();
+        int totalCount=0;
+        int depth=1;
+        ma.ColorType=CellType.White;
+       for(int k=0;k<10;k++) {
+           ma.initPlay();
+           /*if(ma.ColorType==CellType.Black)
+               ma.depth=1;
+           else
+               ma.depth=1;*/
+
+           ma.startPlay(depth);
+           System.out.println(ma.moveCount);
+           totalCount+=ma.moveCount;
+           ma.moveCount=0;
+           Input input=Utility.readFile("/Users/nishatiwari/CSCI561/src/com/input_copy.txt");
+           Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("/Users/nishatiwari/CSCI561/src/com/HW2/input.txt"), "utf-8"));
+           writer.write("GAME");
+           ((BufferedWriter) writer).newLine();
+           writer.write("WHITE");
+           ((BufferedWriter) writer).newLine();
+           writer.write("100");
+           ((BufferedWriter) writer).newLine();
+           CellType[][] board = new CellType[16][16];
+           for(int i=0;i<16;i++)
+           {
+               for(int j=0;j<16;j++)
+               {
+                   board[i][j]=CellType.Empty;
+               }
+           }
+
+           for(Coordinate position:input.getInitState().getBlackPositions())
+           {
+               board[position.x][position.y]=CellType.Black;
+           }
+
+           for(Coordinate position:input.getInitState().getWhitePositions())
+           {
+               board[position.x][position.y]=CellType.White;
+           }
+
+           for(int i=0;i<16;i++) {
+               StringBuilder strb = new StringBuilder();
+               for (int j = 0; j<16; j++) {
+                   strb.append(board[j][i]==CellType.Black?'B':(board[j][i]==CellType.White?'W':'.'));
+               }
+               writer.write(strb.toString());
+               if (i != 15)
+                   ((BufferedWriter) writer).newLine();
+           }
+           writer.close();
+       }
+       System.out.print(ma.map+" "+totalCount/10+" ");
+       System.out.println((System.currentTimeMillis()-time));
+        //System.out.print(ma.map+" "+" "+ma.moveCount);
     }
 
     private static void TestIsValidJump(Set<Coordinate> white, Set<Coordinate> black, CellType color) {

@@ -1,7 +1,10 @@
 package com.HW2;
 
+import javafx.scene.control.Cell;
+
 import java.io.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Utility {
 
@@ -162,4 +165,99 @@ public class Utility {
     public static CellType flipColor(CellType color) {
         return color == CellType.Black ? CellType.White : CellType.Black;
     }
+
+    public static int updateMoveCount() throws IOException, ClassNotFoundException {
+        FileInputStream file = new FileInputStream("/Users/nishatiwari/CSCI561/PlayData.ser");
+        ObjectInputStream in = new ObjectInputStream(file);
+        PlayData pd1 = (PlayData)in.readObject();
+        file.close();
+        in.close();
+        int moveCount=pd1.getMoveCount();
+        FileOutputStream file1 = new FileOutputStream("/Users/nishatiwari/CSCI561/PlayData.ser");
+        ObjectOutputStream out = new ObjectOutputStream(file1);
+
+        // Method for serialization of object
+        pd1.setMoveCount(moveCount+1);
+        out.writeObject(pd1);
+
+        out.close();
+        file1.close();
+
+        in.close();
+        return moveCount;
+    }
+
+    public static boolean isTerminalState(CellType color, Set<Coordinate> positions) {
+        Set<Coordinate> intersection = new HashSet<>(positions);
+        intersection.retainAll(getInitialPositions(Utility.flipColor(color)));
+        return intersection.size()==19;
+
+    }
+
+    public static int filterOutBestNode(GameState startingState, List<Integer> indices) {
+        int bextIndex=0;
+        double maxDistanceCovered=Integer.MIN_VALUE;
+        Map<Double, List<Integer>> mapOfDistances = new HashMap<>();
+        for(int i:indices)
+        {
+            GameState state=startingState.getBranches().get(i);
+            double d=calculateEuclideanDistance(state.getPath().get(0).from, startingState.getColor()==CellType.White?new Coordinate(0,0) :new Coordinate(15,15));
+            if(d>maxDistanceCovered) {
+                maxDistanceCovered = d;
+                bextIndex=i;
+            }
+            if(mapOfDistances.containsKey(d))
+            {
+                List<Integer> bestIndices = mapOfDistances.get(d);
+                bestIndices.add(i);
+                mapOfDistances.put(d, bestIndices);
+            }
+            else
+            {
+                List<Integer> bestIndices = new ArrayList<>();
+                bestIndices.add(i);
+                mapOfDistances.put(d, bestIndices);
+            }
+        }
+        List<Integer> leftIndices=mapOfDistances.get(maxDistanceCovered);
+        //bextIndex=leftIndices.size()>1?leftIndices.get((new Random()).nextInt(leftIndices.size())):bextIndex;
+        return bextIndex;
+    }
+
+    public static int filterOutBestNodeBasedOnEvalFunction(GameState startingState, List<Integer> indices) {
+        if(indices==null)
+            return 0;
+        int bextIndex=0;
+        int maxEval=Integer.MIN_VALUE;
+        Map<Integer, List<Integer>> mapOfDistances = new HashMap<>();
+        for(int i:indices)
+        {
+            GameState state=startingState.getBranches().get(i);
+            if(state.getEvalValue()>maxEval) {
+                maxEval = state.getEvalValue();
+                bextIndex=i;
+            }
+            if(mapOfDistances.containsKey(state.getEvalValue()))
+            {
+                List<Integer> bestIndices = mapOfDistances.get(state.getEvalValue());
+                bestIndices.add(i);
+                mapOfDistances.put(state.getEvalValue(), bestIndices);
+            }
+            else
+            {
+                List<Integer> bestIndices = new ArrayList<>();
+                bestIndices.add(i);
+                mapOfDistances.put(state.getEvalValue(), bestIndices);
+            }
+        }
+        List<Integer> leftIndices=mapOfDistances.get(maxEval);
+        bextIndex=leftIndices.size()>1?leftIndices.get((new Random()).nextInt(leftIndices.size())):bextIndex;
+        return bextIndex;
+    }
+
+
+    public static double calculateEuclideanDistance(Coordinate currPosition, Coordinate position) {
+        return Math.sqrt((currPosition.x - position.x) ^ 2 + (currPosition.y - position.y) ^ 2);
+    }
+
 }
