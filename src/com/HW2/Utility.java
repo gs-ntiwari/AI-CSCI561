@@ -1,10 +1,7 @@
 package com.HW2;
 
-import javafx.scene.control.Cell;
-
 import java.io.*;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class Utility {
 
@@ -192,36 +189,6 @@ public class Utility {
         intersection.retainAll(getInitialPositions(Utility.flipColor(color)));
         return intersection.size()==19;
 
-    }
-
-    public static int filterOutBestNode(GameState startingState, List<Integer> indices) {
-        int bextIndex=0;
-        double maxDistanceCovered=Integer.MIN_VALUE;
-        Map<Double, List<Integer>> mapOfDistances = new HashMap<>();
-        for(int i:indices)
-        {
-            GameState state=startingState.getBranches().get(i);
-            double d=calculateEuclideanDistance(state.getPath().get(0).from, startingState.getColor()==CellType.White?new Coordinate(0,0) :new Coordinate(15,15));
-            if(d>maxDistanceCovered) {
-                maxDistanceCovered = d;
-                bextIndex=i;
-            }
-            if(mapOfDistances.containsKey(d))
-            {
-                List<Integer> bestIndices = mapOfDistances.get(d);
-                bestIndices.add(i);
-                mapOfDistances.put(d, bestIndices);
-            }
-            else
-            {
-                List<Integer> bestIndices = new ArrayList<>();
-                bestIndices.add(i);
-                mapOfDistances.put(d, bestIndices);
-            }
-        }
-        List<Integer> leftIndices=mapOfDistances.get(maxDistanceCovered);
-        //bextIndex=leftIndices.size()>1?leftIndices.get((new Random()).nextInt(leftIndices.size())):bextIndex;
-        return bextIndex;
     }
 
     public static int filterOutBestNodeBasedOnEvalFunction(GameState startingState, List<Integer> indices) {

@@ -7,14 +7,12 @@ import java.util.Map;
 
 
 public class homework {
-    public static void main(String[] args) throws ClassNotFoundException {
+    public static void main(String[] args) {
         try {
-            //long startTime=System.currentTimeMillis();
             Input input=Utility.readFile("/Users/nishatiwari/CSCI561/src/com/HW2/input.txt");
-            //int currentMove=Utility.updateMoveCount();
             int depth;
             GameState startingState=input.getInitState();
-            if(input.time<20)
+            if(input.time<15)
                 depth=1;
             else
                 depth=5;
@@ -25,12 +23,15 @@ public class homework {
             }
             List<Integer> indices =startingState.tieBreaker.get(startingState.alpha);
             int bestIndex;
-            if(indices==null ||indices.size()>1)
-                bestIndex=Utility.filterOutBestNodeBasedOnEvalFunction(startingState,indices);
+            if(indices==null ||indices.size()>1) {
+                for (int i : indices) {
+                    startingState.getBranches().get(i).evalTerminalNode(startingState.getColor());
+                }
+                bestIndex = Utility.filterOutBestNodeBasedOnEvalFunction(startingState, indices);
+            }
             else
                 bestIndex=startingState.bestNode;
 
-            //Utility.writeOutput(startingState.getBranches().get(indices.size()>1?indices.get((new Random()).nextInt(indices.size())): startingState.bestNode));
             Utility.writeOutput(startingState.getBranches().get(bestIndex));
             //System.out.println("time taken "+String.valueOf(System.currentTimeMillis()-startTime));
         } catch (IOException e) {
@@ -62,11 +63,7 @@ public class homework {
             else
                 bestIndex=startingState.bestNode;
 
-            //Utility.writeOutput(startingState.getBranches().get(indices.size()>1?indices.get((new Random()).nextInt(indices.size())): startingState.bestNode));
             Utility.writeOutput(startingState.getBranches().get(bestIndex));
-            //System.out.println(indices.size());
-            //System.out.println("Pruned Nodes::"+ startingState.prunedNodes);
-            //System.out.println(branchesStats);
         } catch (IOException e) {
             e.printStackTrace();
         }
