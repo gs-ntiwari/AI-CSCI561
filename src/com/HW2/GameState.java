@@ -19,6 +19,7 @@ public class GameState {
     int beta=Integer.MAX_VALUE;
     int bestNode=-1;
     Map<Integer, List<Integer>> tieBreaker= new HashMap<>();
+    int prunedNodes=0;
 
     public List<Path> getPath() {
         return path;
@@ -160,21 +161,74 @@ public class GameState {
         }
         List<GameState> branches = new ArrayList<>();
         if (this.color == CellType.White) {
-            branches.addAll(generateAllPossibleBranches(this.whitePositions));
+            branches.addAll(generateAllPossibleBranches(this.whitePositions, myColor));
         } else {
-            branches.addAll(generateAllPossibleBranches(this.blackPositions));
-        }
-        for(GameState branch:branches)
-        {
-            branch.evalTerminalNode(myColor);
+            branches.addAll(generateAllPossibleBranches(this.blackPositions, myColor));
         }
 
-        /*if(depth%2==0)
-            Collections.sort(branches, new DecreasingOrder());
-        else
-            Collections.sort(branches, new IncreasingOrder());*/
+        SortTheBranches(depth, branches, false, myColor);
+
+        int v = getV(myColor);
+        //branchesStats.put(branches.size(), branchesStats.containsKey(branches.size())?branchesStats.get(branches.size())+1:1);
+        if(branches.size()>110 )
+            depth=depth==5?3:depth==3?1:depth;
+        for (int i=0;i<branches.size();i++) {
+            GameState gameState=branches.get(i);
+            if (gameState != null) {
+                int action_value= getAction_value(depth, myColor, gameState);
+                if (this.color == myColor) {
+                    v = Math.max(v, action_value);
+                    if (v >= this.beta) {
+                        this.prunedNodes++;
+                        return v;
+                    }
+                    updateTieBreakerMap(i, action_value);
+                    if(this.alpha<v) {
+                        this.alpha = v;
+                        this.bestNode=i;
+                    }
+                } else {
+                    v = Math.min(v, action_value);
+                    if (v <= this.alpha) {
+                        this.prunedNodes++;
+                        return v;
+                    }
+                    updateTieBreakerMap(i, action_value);
+                    if(this.beta>v) {
+                        this.beta = v;
+                        this.bestNode=i;
+                    }
+                }
+            }
+        }
+        return v;
+    }
+
+    private int getAction_value(int depth, CellType myColor, GameState gameState) {
+        int action_value;
+        if(Utility.isTerminalState(this.color, this.color==CellType.Black?gameState.blackPositions:gameState.whitePositions))
+            action_value=this.color==myColor?10000000*depth:-10000000*depth;
+        else {
+            action_value = gameState.generateBranches(depth - 1, myColor);
+        }
+        return action_value;
+    }
+
+    private void SortTheBranches(int depth, List<GameState> branches, boolean toSort, CellType myColor) {
+        if(toSort) {
+            for(GameState branch:branches)
+            {
+                branch.evalTerminalNode(myColor);
+            }
+            if (depth % 2 == 1)
+                Collections.sort(branches, new DecreasingOrder());
+            else
+                Collections.sort(branches, new IncreasingOrder());
+        }
         this.branches = branches;
+    }
 
+    private int getV(CellType myColor) {
         int v;
         if (this.color == myColor)
         {
@@ -183,38 +237,6 @@ public class GameState {
         else
         {
             v=Integer.MAX_VALUE;
-        }
-        if(branches.size()>80)
-            depth=depth==3?1:depth;
-        for (int i=0;i<branches.size();i++) {
-            GameState gameState=branches.get(i);
-            if (gameState != null) {
-                int action_value;
-                if(Utility.isTerminalState(this.color, this.color==CellType.Black?gameState.blackPositions:gameState.whitePositions))
-                    action_value=this.color==myColor?10000000*depth:-10000000*depth;
-                else {
-                    action_value = gameState.generateBranches(depth - 1, myColor);
-                }
-                if (this.color == myColor) {
-                    v = Math.max(v, action_value);
-                    if (v >= this.beta)
-                        return v;
-                    updateTieBreakerMap(i, action_value);
-                    if(this.alpha<v) {
-                        this.alpha = v;
-                        this.bestNode=i;
-                    }
-                } else {
-                    v = Math.min(v, action_value);
-                    if (v <= this.alpha)
-                        return v;
-                    updateTieBreakerMap(i, action_value);
-                    if(this.beta>v) {
-                        this.beta = v;
-                        this.bestNode=i;
-                    }
-                }
-            }
         }
         return v;
     }
@@ -246,17 +268,25 @@ public class GameState {
         final double maxWhenNotInOpponentCamp = Math.pow(23,2);
         int numPiecesInOpponentsCamp = 0;
         int avgDistanceFromDiagonal = 0;
+        double minDistance=Integer.MAX_VALUE;
+        double maxDistance=Integer.MIN_VALUE;
         final double wt_of_pieces_opponent_camp = 0.2;
         final double wt_of_diagonal_distance = 0.5;
         final double wt_of_avg_distance = 0.3;
+        final double wt_of_minmax_distance = 0.0;
         for (Coordinate position : myPositions) {
             if (originalOpponentPositions.contains(position)) {
                 numPiecesInOpponentsCamp++;
             } else {
                 avgDistanceFromDiagonal += color == CellType.White ? Math.pow(position.x + position.y, 2) : Math.pow((15 - position.x) +(15-position.y), 2);
-                avgDistance += getDistanceFromCurrentPosition(position, color);
+                int distance = getDistanceFromCurrentPosition(position, color, originalMyPositions, originalOpponentPositions);
+                avgDistance += distance;
+                //minDistance = Math.min(minDistance, distance);
+                //maxDistance =Math.min(maxDistance, distance);
             }
+
         }
+
         /*for (Coordinate position : opponentPositions) {
             if (originalMyPositions.contains(position)) {
                 numPiecesInOpponentsCamp--;
@@ -269,7 +299,8 @@ public class GameState {
         avgDistanceFromDiagonal /= myPositions.size();
         float_eval = (wt_of_pieces_opponent_camp * maxWhenNotInOpponentCamp * numPiecesInOpponentsCamp / myPositions.size() * maxWhenNotInOpponentCamp) + (wt_of_diagonal_distance * (-1*avgDistanceFromDiagonal)) +
                 (wt_of_avg_distance * -1*avgDistance);
-        this.evalValue = (int) (float_eval);
+        // +(-1*wt_of_minmax_distance*(maxDistance-minDistance));
+        this.evalValue = (int) (Math.round(float_eval));
 
     }
 
@@ -365,13 +396,13 @@ public class GameState {
         return  Math.round(d);
     }
 
-    private List<GameState> generateAllPossibleBranches(Set<Coordinate> positions) {
+    private List<GameState> generateAllPossibleBranches(Set<Coordinate> positions, CellType myColor) {
         List<GameState> nextMoves = new ArrayList<>();
         Set<Coordinate> initialPositions = Utility.getInitialPositions(this.color);
-        /*if(this.color==CellType.Black) {
+        if(this.color!=myColor) {
             nextMoves.add(new GameState(this.whitePositions, this.blackPositions, Utility.flipColor(this.color), this, new Coordinate(-1, -1), new Coordinate(-1, -1), MoveType.Adjacent));
             return nextMoves;
-        }*/
+        }
         //there are moves left at home
         boolean needToMoveFromInitialState=true;
 

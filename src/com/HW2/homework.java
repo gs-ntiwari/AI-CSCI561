@@ -1,27 +1,27 @@
 package com.HW2;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 public class homework {
     public static void main(String[] args) throws ClassNotFoundException {
         try {
             //long startTime=System.currentTimeMillis();
-            Input input=Utility.readFile("/Users/nishatiwari/CSCI561/src/com/HW2/multipleJumps.txt");
-            /*int currentMove=Utility.updateMoveCount();
+            Input input=Utility.readFile("/Users/nishatiwari/CSCI561/src/com/HW2/input.txt");
+            //int currentMove=Utility.updateMoveCount();
             int depth;
-            if(currentMove<=30)
-                depth=1;
-            else if(currentMove<=50)
-                depth=3;
-            else
-                depth=2;*/
             GameState startingState=input.getInitState();
+            if(input.time<20)
+                depth=1;
+            else
+                depth=5;
             if(input.isSinglePlayer)
                 startingState.generateBranches(1, startingState.getColor());
             else {
-                startingState.generateBranches(3, startingState.getColor());
+                startingState.generateBranches(depth, startingState.getColor());
             }
             List<Integer> indices =startingState.tieBreaker.get(startingState.alpha);
             int bestIndex;
@@ -44,6 +44,11 @@ public class homework {
             long startTime=System.currentTimeMillis();
             Input input=Utility.readFile("/Users/nishatiwari/CSCI561/src/com/HW2/input.txt");
             GameState startingState=input.getInitState();
+            Map<Integer, Integer> branchesStats= new HashMap<>();
+            if(input.time<15)
+                depth=1;
+            else
+                depth=5;
             if(input.isSinglePlayer)
                 startingState.generateBranches(1, startingState.getColor());
             else {
@@ -60,7 +65,8 @@ public class homework {
             //Utility.writeOutput(startingState.getBranches().get(indices.size()>1?indices.get((new Random()).nextInt(indices.size())): startingState.bestNode));
             Utility.writeOutput(startingState.getBranches().get(bestIndex));
             //System.out.println(indices.size());
-            //System.out.println("time taken "+String.valueOf(System.currentTimeMillis()-startTime)+" brnaching size::"+startingState.getBranches().size());
+            //System.out.println("Pruned Nodes::"+ startingState.prunedNodes);
+            //System.out.println(branchesStats);
         } catch (IOException e) {
             e.printStackTrace();
         }

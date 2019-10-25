@@ -9,7 +9,8 @@ import java.util.Set;
 public class TestFile {
 
     public static  void main (String[] args) throws IOException {
-        long time=System.currentTimeMillis();
+        long starttime=System.currentTimeMillis();
+
         /*PlayData pd = new PlayData();
         pd.setMoveCount(0);
         FileOutputStream file1 = new FileOutputStream("PlayData.ser");
@@ -27,7 +28,12 @@ public class TestFile {
         int totalCount=0;
         int depth=1;
         ma.ColorType=CellType.White;
-       for(int k=0;k<10;k++) {
+        int min=Integer.MAX_VALUE;
+        int max=Integer.MIN_VALUE;
+        long maxTime=Integer.MIN_VALUE;
+        long minTime=Integer.MAX_VALUE;
+       for(int k=0;k<1;k++) {
+           long time=System.currentTimeMillis();
            ma.initPlay();
            /*if(ma.ColorType==CellType.Black)
                ma.depth=1;
@@ -35,8 +41,13 @@ public class TestFile {
                ma.depth=1;*/
 
            ma.startPlay(depth);
+           long totalTime= System.currentTimeMillis()-time;
+           maxTime=Math.max(totalTime, maxTime);
+           minTime=Math.min(totalTime, minTime);
            System.out.println(ma.moveCount);
            totalCount+=ma.moveCount;
+           max=Math.max(ma.moveCount, max);
+           min=Math.min(ma.moveCount, min);
            ma.moveCount=0;
            Input input=Utility.readFile("/Users/nishatiwari/CSCI561/src/com/input_copy.txt");
            Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("/Users/nishatiwari/CSCI561/src/com/HW2/input.txt"), "utf-8"));
@@ -76,8 +87,8 @@ public class TestFile {
            }
            writer.close();
        }
-       System.out.print(ma.map+" "+totalCount/10+" ");
-       System.out.println((System.currentTimeMillis()-time));
+       System.out.println(ma.map+" "+totalCount/1+" "+"max "+max+""+"min "+min+" "+"max Time "+maxTime+""+"min Time "+minTime+"");
+       System.out.println((System.currentTimeMillis()-starttime)/1);
         //System.out.print(ma.map+" "+" "+ma.moveCount);
     }
 

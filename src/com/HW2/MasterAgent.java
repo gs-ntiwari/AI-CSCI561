@@ -86,7 +86,7 @@ public class MasterAgent {
                 return;
             }
             else {
-                System.out.println("current game configuration");
+               /* System.out.println("current game configuration");
                 for(int i=0;i<16;i++)
                 {
                     for(int j=0;j<16;j++)
@@ -94,7 +94,7 @@ public class MasterAgent {
                         System.out.print(board[j][i]==CellType.Black?'B':(board[j][i]==CellType.White?'W':'.'));
                     }
                     System.out.println();
-                }
+                }*/
                 this.ColorType=Utility.flipColor(this.ColorType);
                 writeToInputFile();
             }
