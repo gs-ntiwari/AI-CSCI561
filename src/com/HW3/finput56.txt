@@ -1,0 +1,9 @@
+1
+Ancestor(Lis,Bob)
+6
+Mother(Lis,Charlie)
+Father(Lis,Billy)
+Mother(x,y)=>Parent(x,y)
+Father(x,y)=>Parent(x,y)
+Parent(x,y)=>Ancestor(x,y)
+Parent(x,y) & Ancestor(y,z)=>Ancestor(x,z)

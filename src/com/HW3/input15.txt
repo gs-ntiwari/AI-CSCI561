@@ -1,0 +1,11 @@
+1
+Passes(Bob,AI)
+8
+HasHelp(x) & IsWillingToLearn(x,y) => Passes(x,y)
+Classmate(x,y) => HasHelp(x) & HasHelp(y)
+Classmate(x,y) & Classmate(y,z) => Classmate(x,z)
+Enrolled(x,y) & Enrolled(z,y) => Classmate(x,z)
+Enrolled(Bob,AI)
+Enrolled(Alice,AI)
+Classmate(Alice,Susan)
+IsWillingToLearn(Bob,AI)

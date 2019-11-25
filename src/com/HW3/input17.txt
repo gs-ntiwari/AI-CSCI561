@@ -1,0 +1,8 @@
+1
+Hero(Frodo)
+5
+Journey(Frodo,Mount Doom)
+Halfling(x) => Hobbit(x)
+Journey(x,y) => FinalBattle(x,y)
+Halfling(Frodo)
+Hobbit(x) & FinalBattle(x,Mount Doom) => Hero(x)

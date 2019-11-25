@@ -1,0 +1,6 @@
+1
+Age(John,100)
+3
+Age(July,100)
+Married(John, July)
+Married(x,y) & Age(y,100)=> Age(x,100)
