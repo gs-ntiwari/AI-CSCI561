@@ -1,8 +1,0 @@
-1
-Eats(Loon,Fish)
-5
-Sleeps(Loon,Tree)
-Bird(Loon)
-Aquatic(Loon)
-Aquatic(x) & Sleeps(x,Tree) => Lake(z) & Beside(Tree,z)
-Sleeps(x,y) & Beside(y,z) => Eats(z,Fish)

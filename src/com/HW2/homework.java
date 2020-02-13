@@ -9,13 +9,13 @@ import java.util.Map;
 public class homework {
     public static void main(String[] args) {
         try {
-            Input input=Utility.readFile("/Users/nishatiwari/CSCI561/src/com/HW2/input.txt");
+            Input input=Utility.readFile("input.txt");
             int depth;
             GameState startingState=input.getInitState();
-            if(input.time<15)
+            if(input.time<45)
                 depth=1;
             else
-                depth=5;
+                depth=3;
             if(input.isSinglePlayer)
                 startingState.generateBranches(1, startingState.getColor());
             else {
@@ -49,7 +49,7 @@ public class homework {
             if(input.time<15)
                 depth=1;
             else
-                depth=5;
+                depth=3;
             if(input.isSinglePlayer)
                 startingState.generateBranches(1, startingState.getColor());
             else {
@@ -58,8 +58,12 @@ public class homework {
             // Since our player is a MAX player, hence alpha indicates the max possible value.
             List<Integer> indices =startingState.tieBreaker.get(startingState.alpha);
             int bestIndex=-1;
-            if(indices==null ||indices.size()>1)
-                bestIndex=Utility.filterOutBestNodeBasedOnEvalFunction(startingState,indices);
+            if(indices==null ||indices.size()>1) {
+                for (int i : indices) {
+                    startingState.getBranches().get(i).evalTerminalNode(startingState.getColor());
+                }
+                bestIndex = Utility.filterOutBestNodeBasedOnEvalFunction(startingState, indices);
+            }
             else
                 bestIndex=startingState.bestNode;
 

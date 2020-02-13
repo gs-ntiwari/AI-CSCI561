@@ -1,10 +1,6 @@
 package com.HW2;
 
-import javafx.scene.control.Cell;
-
-import javax.swing.*;
 import java.io.*;
-import java.util.Collections;
 import java.util.Set;
 
 public class TestFile {
@@ -30,7 +26,7 @@ public class TestFile {
         int max=Integer.MIN_VALUE;
         long maxTime=Integer.MIN_VALUE;
         long minTime=Integer.MAX_VALUE;
-       for(int k=0;k<1;k++) {
+       for(int k=0;k<50;k++) {
            long time=System.currentTimeMillis();
            ma.initPlay();
            /*if(ma.ColorType==CellType.Black)
@@ -85,8 +81,8 @@ public class TestFile {
            }
            writer.close();
        }
-       System.out.println(ma.map+" "+totalCount/1+" "+"max "+max+""+"min "+min+" "+"max Time "+maxTime+""+"min Time "+minTime+"");
-       System.out.println((System.currentTimeMillis()-starttime)/1);
+       System.out.println(ma.map+" "+totalCount/20+" "+"max "+max+""+"min "+min+" "+"max Time "+maxTime+""+"min Time "+minTime+"");
+       System.out.println((System.currentTimeMillis()-starttime)/20);
         //System.out.print(ma.map+" "+" "+ma.moveCount);
     }
 

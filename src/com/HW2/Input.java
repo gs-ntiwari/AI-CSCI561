@@ -1,5 +1,7 @@
 package com.HW2;
 
+import com.HW2.GameState;
+
 public class Input {
     boolean isSinglePlayer=false;
     double time;

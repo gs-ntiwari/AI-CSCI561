@@ -1,9 +1,0 @@
-1
-Threat(Hydralisk)
-6
-Zerg(x) => Hostile(x)
-Hostile(x) & UnGuarded(Base) & Near(x,Base) => Threat(x)
-Observed(x,y) => Near(x,y)
-Observed(Hydralisk,Base)
-UnGuarded(Base)
-Zerg(Hydralisk)

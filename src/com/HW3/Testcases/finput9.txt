@@ -1,0 +1,8 @@
+1
+Faster(Bob,Steve)
+5
+Faster(x,y) & Faster(y,z) => Faster(x,z)
+Faster(Bob,Nisha)
+Faster(Pranali,Nisha)
+Faster(Pranali,Anu)
+Faster(Anu,Steve)

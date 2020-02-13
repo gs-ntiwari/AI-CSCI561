@@ -1,11 +1,12 @@
 package com.HW2;
+
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 public class MasterAgent {
     int moveCount=0;
-    CellType ColorType=CellType.Black;
+    CellType ColorType=CellType.White;
     CellType [][] board = new CellType[16][16];
     int depth=1;
     Map<CellType, Integer> map= new HashMap();
