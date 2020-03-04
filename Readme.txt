@@ -1,4 +1,4 @@
-This folder contains the code for three assignments given under CSCI561 Artificial Intelligence course. 
+This folder contains the code for three assignments given under CSCI561 Artificial Intelligence course at University of Southern California
 
 HW1 - Implement AStart, BFS, and UCS to find a route from a source to a target avoiding obstacles.
 
